@@ -157,7 +157,16 @@ def process_document(
         write_paragraphs(corrected_paragraphs, output_path)
     _write_log_jsonl(log_path, log_entries)
     if enable_docx_log:
-        docx_path = log_docx_path or str(Path(input_path).with_name(Path(input_path).stem + ".corrections.docx"))
+        if log_docx_path:
+            docx_path = log_docx_path
+        else:
+            # Si log_path está en outputs/, poner el DOCX también ahí
+            log_parent = Path(log_path).parent
+            if log_parent.name == "outputs" or str(log_parent).endswith("outputs"):
+                docx_path = str(log_parent / f"{Path(input_path).stem}.corrections.docx")
+            else:
+                # Fallback: mismo directorio que el log JSONL
+                docx_path = str(Path(log_path).with_suffix(".docx"))
         _write_log_docx(docx_path, log_entries, source_filename=Path(input_path).name)
 
 
