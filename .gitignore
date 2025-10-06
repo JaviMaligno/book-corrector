@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Outputs - archivos generados por el corrector
+*.corrected.docx
+*.corrections.jsonl
+*.corrections.docx
+outputs/*
+!outputs/.gitkeep
+output_test.docx
+log_test.jsonl
+
+# Inputs - documentos de usuario (no trackear)
+*.docx
+!tests/samples/*.docx
+!examples/ejemplo_*.docx
+
+# Archivos temporales
+*.tmp
+*.bak
+.cache/
+*.log
+
+# Environment variables (mantener .env.example pero no .env si tiene keys reales)
+# .env
+
+# Archivos de debug
+debug_*.py
+test_manual.py
+monitor_progress.py
+run_corrector.py
+run_test.bat

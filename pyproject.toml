@@ -1,0 +1,22 @@
+[project]
+name = "corrector"
+version = "0.1.0"
+description = "Corrector ortográfico/contextual en español con Gemini, entrada DOCX y log de correcciones"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Corrector Team" }]
+dependencies = [
+  "pydantic>=2.4",
+  "python-docx>=1.0.0",
+  "google-genai>=0.3.0",
+  "python-dotenv>=1.0.1"
+]
+
+[project.scripts]
+corrector = "corrector.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0"
+]
+
