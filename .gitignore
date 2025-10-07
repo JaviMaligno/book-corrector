@@ -9,7 +9,8 @@ htmlcov/
 .env
 .venv/
 venv/
-
+*.txt
+*lock.json
 # Build
 dist/
 build/
@@ -22,3 +23,6 @@ build/
 # Project outputs
 *outputs/
 storage/
+
+# Database
+local.db

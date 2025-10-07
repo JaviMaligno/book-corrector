@@ -7,7 +7,10 @@ import Viewer from './pages/Viewer'
 import Projects from './pages/Projects'
 import ProjectDetail from './pages/ProjectDetail'
 import RunDetail from './pages/RunDetail'
+import Login from './pages/Login'
+import Register from './pages/Register'
 import Layout from './layouts/Layout'
+import { AuthProvider } from './contexts/AuthContext'
 
 const queryClient = new QueryClient()
 
@@ -15,10 +18,13 @@ const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: '/', element: <Viewer /> },
+      { path: '/', element: <Projects /> },
       { path: '/projects', element: <Projects /> },
       { path: '/projects/:projectId', element: <ProjectDetail /> },
-      { path: '/runs/:runId', element: <RunDetail /> }
+      { path: '/runs/:runId', element: <RunDetail /> },
+      { path: '/viewer', element: <Viewer /> },
+      { path: '/login', element: <Login /> },
+      { path: '/register', element: <Register /> }
     ]
   }
 ])
@@ -26,7 +32,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>
 )

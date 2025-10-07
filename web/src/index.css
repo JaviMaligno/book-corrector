@@ -7,7 +7,11 @@
 }
 
 .btn-primary{
-  @apply bg-[color:var(--ink)] text-white px-4 py-2 rounded-md hover:opacity-90 transition;
+  @apply bg-brand-ink text-white px-4 py-2 rounded-md hover:opacity-90 transition;
+}
+
+.btn-secondary{
+  @apply bg-white text-brand-ink border border-brand-ink/20 px-4 py-2 rounded-md hover:bg-brand-ink/5 transition;
 }
 
 .chip{
@@ -15,19 +19,17 @@
 }
 
 .chip-ok{
-  @apply text-[color:var(--teal)] border rounded text-sm inline-flex items-center px-2 py-0.5;
+  @apply text-brand-teal border border-brand-teal/40 rounded text-sm inline-flex items-center px-2 py-0.5;
   background-color: rgb(32 201 151 / 0.1);
-  border-color: rgb(32 201 151 / 0.4);
 }
 .chip-warn{ @apply bg-yellow-500/10 text-yellow-700 border border-yellow-500/30; }
 .chip-err{
-  @apply text-[color:var(--red)] border rounded text-sm inline-flex items-center px-2 py-0.5;
+  @apply text-brand-red border border-brand-red/30 rounded text-sm inline-flex items-center px-2 py-0.5;
   background-color: rgb(230 57 70 / 0.1);
-  border-color: rgb(230 57 70 / 0.3);
 }
 
 .badge{
-  @apply text-xs uppercase tracking-wide font-medium px-1.5 py-0.5 rounded text-[color:var(--ink)];
+  @apply text-xs uppercase tracking-wide font-medium px-1.5 py-0.5 rounded text-brand-ink;
   background-color: rgb(22 53 91 / 0.1);
 }
 

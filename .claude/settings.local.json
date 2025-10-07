@@ -36,7 +36,8 @@
       "Bash(netstat:*)",
       "Bash(timeout 120 docker-compose -f docker-compose.dev.yml logs web)",
       "Bash(timeout:*)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(docker exec:*)"
     ],
     "deny": [],
     "ask": []

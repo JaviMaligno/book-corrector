@@ -12,6 +12,17 @@ from .models import Project, User
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
+@router.get("/public")
+def list_projects_public():
+    """Endpoint público que devuelve información sobre proyectos sin requerir autenticación"""
+    return {
+        "message": "Para ver proyectos necesitas autenticación",
+        "auth_required": True,
+        "register_endpoint": "/auth/register",
+        "login_endpoint": "/auth/login"
+    }
+
+
 class ProjectCreate(BaseModel):
     name: str
     lang_variant: str | None = None

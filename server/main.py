@@ -5,9 +5,11 @@ from typing import Dict
 
 try:
     from fastapi import FastAPI, HTTPException
+    from fastapi.middleware.cors import CORSMiddleware
 except Exception:  # pragma: no cover - only needed when running the server
     FastAPI = None  # type: ignore
     HTTPException = Exception  # type: ignore
+    CORSMiddleware = None  # type: ignore
 
 from sqlmodel import select
 
@@ -27,6 +29,16 @@ def create_app() -> "FastAPI":  # type: ignore
     if FastAPI is None:
         raise RuntimeError("FastAPI is not installed. Please `pip install fastapi uvicorn`.\n" )
     app = FastAPI(title="Corrector Backend", version="0.1")
+
+    # CORS middleware
+    if CORSMiddleware is not None:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     # Init DB tables
     init_db()

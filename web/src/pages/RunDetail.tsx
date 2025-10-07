@@ -37,9 +37,9 @@ export default function RunDetail(){
             const viewer = `/?jsonlUrl=${encodeURIComponent(href)}`
             return (
               <li key={f} className="text-sm flex items-center gap-3">
-                <a className="text-[color:var(--ink)] underline" href={href} target="_blank" rel="noreferrer">{f}</a>
+                <a className="text-brand-ink underline" href={href} target="_blank" rel="noreferrer">{f}</a>
                 {isJsonl && (
-                  <a className="px-2 py-1 border rounded text-[color:var(--ink)] hover:bg-[color:var(--ink)]/10" href={viewer}>
+                  <a className="px-2 py-1 border border-brand-ink/20 rounded text-brand-ink hover:bg-brand-ink/10" href={viewer}>
                     Ver en visor
                   </a>
                 )}

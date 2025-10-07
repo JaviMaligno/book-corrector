@@ -6,6 +6,7 @@ from sqlmodel import Session, select
 
 from .auth import create_access_token, hash_password, verify_password
 from .db import get_session
+from .deps import get_current_user
 from .models import Role, User
 
 
@@ -48,3 +49,8 @@ def login(req: LoginRequest, session: Session = Depends(get_session)):
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     token = create_access_token(user.id)
     return TokenResponse(access_token=token)
+
+
+@router.get("/me")
+def me(current: User = Depends(get_current_user)):
+    return {"id": current.id, "email": current.email}
