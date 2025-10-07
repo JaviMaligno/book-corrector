@@ -14,11 +14,23 @@
   @apply inline-flex items-center px-2 py-0.5 rounded text-sm;
 }
 
-.chip-ok{ @apply bg-[color:var(--teal)]/10 text-[color:var(--teal)] border border-[color:var(--teal)]/40; }
+.chip-ok{
+  @apply text-[color:var(--teal)] border rounded text-sm inline-flex items-center px-2 py-0.5;
+  background-color: rgb(32 201 151 / 0.1);
+  border-color: rgb(32 201 151 / 0.4);
+}
 .chip-warn{ @apply bg-yellow-500/10 text-yellow-700 border border-yellow-500/30; }
-.chip-err{ @apply bg-[color:var(--red)]/10 text-[color:var(--red)] border border-[color:var(--red)]/30; }
+.chip-err{
+  @apply text-[color:var(--red)] border rounded text-sm inline-flex items-center px-2 py-0.5;
+  background-color: rgb(230 57 70 / 0.1);
+  border-color: rgb(230 57 70 / 0.3);
+}
 
-.badge{ @apply text-xs uppercase tracking-wide font-medium px-1.5 py-0.5 rounded bg-[color:var(--ink)]/10 text-[color:var(--ink)]; }
+.badge{
+  @apply text-xs uppercase tracking-wide font-medium px-1.5 py-0.5 rounded text-[color:var(--ink)];
+  background-color: rgb(22 53 91 / 0.1);
+}
 
 .card{ @apply bg-white rounded-lg shadow-sm border border-gray-200; }
+
 

@@ -21,8 +21,6 @@ class User(SQLModel, table=True):
     role: Role = Field(default=Role.free)
     created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.utcnow())
 
-    projects: list["Project"] = Relationship(back_populates="owner")
-
 
 class Project(SQLModel, table=True):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
@@ -33,8 +31,6 @@ class Project(SQLModel, table=True):
     config_json: Optional[str] = None
     created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.utcnow())
 
-    owner: Optional[User] = Relationship(back_populates="projects")
-    documents: list["Document"] = Relationship(back_populates="project")
 
 
 class DocumentKind(str, Enum):
@@ -59,7 +55,6 @@ class Document(SQLModel, table=True):
     checksum: Optional[str] = None
     status: DocumentStatus = Field(default=DocumentStatus.new)
 
-    project: Optional[Project] = Relationship(back_populates="documents")
 
 
 class RunMode(str, Enum):

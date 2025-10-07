@@ -29,7 +29,14 @@
       "Bash(move debug_gemini_verbose.py scripts )",
       "Bash(move run_corrector.py scripts )",
       "Bash(move monitor_progress.py scripts)",
-      "Bash(move:*)"
+      "Bash(move:*)",
+      "Bash(cat:*)",
+      "Bash(docker-compose:*)",
+      "Bash(curl:*)",
+      "Bash(netstat:*)",
+      "Bash(timeout 120 docker-compose -f docker-compose.dev.yml logs web)",
+      "Bash(timeout:*)",
+      "Bash(npm install)"
     ],
     "deny": [],
     "ask": []

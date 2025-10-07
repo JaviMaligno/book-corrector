@@ -2,8 +2,8 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 COPY web/package.json /app/package.json
-COPY web/package-lock.json /app/package-lock.json 2>/dev/null || true
-RUN npm i --quiet --no-progress
+COPY web/package-lock.json /app/package-lock.json
+RUN npm ci --omit=optional && npm install --no-save @rollup/rollup-linux-x64-musl
 COPY web /app
 
 # Development uses vite dev server

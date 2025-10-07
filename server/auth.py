@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=True)
 
 
 def get_secret_key() -> str:

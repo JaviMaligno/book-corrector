@@ -115,9 +115,10 @@ def create_run(
     session.commit()
 
     # Enqueue into in-memory scheduler (fair-share) and respect per-plan limits
-    limits = _limits_for(current.role.value)
+    role_value = current.role.value if hasattr(current.role, 'value') else str(current.role)
+    limits = _limits_for(role_value)
     sched = get_scheduler()
-    sched.register_user(SUser(id=current.id, plan=current.role.value))
+    sched.register_user(SUser(id=current.id, plan=role_value))
     job = RunJob(
         user_id=current.id,
         run_id=run.id,
