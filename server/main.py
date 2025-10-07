@@ -73,9 +73,11 @@ def create_app() -> "FastAPI":  # type: ignore
         from .worker import Worker
 
         _worker = Worker()
+        print("✅ Worker initialized successfully")
 
         @app.on_event("startup")
         def _start_worker():  # pragma: no cover
+            print("🚀 Starting worker...")
             # Rebuild the in-memory scheduler from queued tasks in DB
             try:
                 with session_scope() as session:
@@ -84,6 +86,7 @@ def create_app() -> "FastAPI":  # type: ignore
                         .join(Run, Run.id == RunDocument.run_id)
                         .where(RunDocument.status == RunDocumentStatus.queued)
                     ).all()
+                    print(f"📋 Found {len(rows)} queued tasks to rebuild")
                     for rd, run in rows:
                         user = session.get(User, run.submitted_by)
                         plan = (user.role.value if hasattr(user, "role") else "free") if user else "free"
@@ -97,16 +100,20 @@ def create_app() -> "FastAPI":  # type: ignore
                             use_ai=False,
                         )
                         get_scheduler().enqueue_run(job)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"⚠️  Error rebuilding scheduler: {e}")
             _worker.start()
+            print("✅ Worker started successfully")
 
         @app.on_event("shutdown")
         def _stop_worker():  # pragma: no cover
+            print("🛑 Stopping worker...")
             _worker.stop()
-    except Exception:
+    except Exception as e:
         # Worker not started if dependencies are missing
-        pass
+        print(f"❌ Worker failed to initialize: {e}")
+        import traceback
+        traceback.print_exc()
 
     return app
 

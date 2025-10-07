@@ -85,6 +85,7 @@ class Worker:
     def _process_task(self, task: DocumentTask) -> None:
         from .db import session_scope
 
+        # Extraer datos necesarios dentro de la sesión
         with session_scope() as session:
             doc = session.get(Document, task.document_id)
             run_doc = session.exec(
@@ -96,15 +97,21 @@ class Worker:
             if not doc or not run_doc or not run:
                 logger.warning("Task references missing entities: %s", task)
                 return
+
+            # Extraer valores antes de salir de la sesión
+            doc_path = doc.path
+            doc_name = doc.name
+            use_ai = run_doc.use_ai if hasattr(run_doc, 'use_ai') else False
+
             # status/lock were set in _try_lock_task
             session.add(run_doc)
             session.commit()
 
         # Paths de entrada/salida
-        if not doc.path:
+        if not doc_path:
             self._mark_failed(task, reason="missing document path")
             return
-        input_path = Path(doc.path)
+        input_path = Path(doc_path)
         if not input_path.exists():
             self._mark_failed(task, reason="document not found")
             return
@@ -120,10 +127,25 @@ class Worker:
         changelog_csv_path = out_base / f"{stem}.changelog.csv"
         summary_md_path = out_base / f"{stem}.summary.md"
 
-        # Corrector (costo 0)
-        corrector = HeuristicCorrector()
+        # Seleccionar corrector según configuración
+        if use_ai:
+            from corrector.model import GeminiCorrector
+            from corrector.llm import LLMNotConfigured
+            try:
+                corrector = GeminiCorrector()
+                logger.info("✅ Using Gemini AI corrector for document: %s", doc_name)
+            except LLMNotConfigured:
+                logger.warning("⚠️  Gemini not configured, falling back to HeuristicCorrector")
+                corrector = HeuristicCorrector()
+        else:
+            corrector = HeuristicCorrector()
+            logger.info("📝 Using HeuristicCorrector (no AI) for document: %s", doc_name)
 
         try:
+            logger.info("📄 Processing document: %s", doc_name)
+            logger.info("   Input: %s", input_path)
+            logger.info("   Output: %s", corrected_path)
+
             process_document(
                 input_path=str(input_path),
                 output_path=str(corrected_path),
@@ -133,10 +155,17 @@ class Worker:
                 log_docx_path=str(log_docx_path),
                 enable_docx_log=True,
             )
+
+            logger.info("✅ Document processing completed: %s", doc_name)
+            logger.info("📊 Building CSV changelog...")
             # Construir CSV a partir del JSONL
             self._build_csv_from_jsonl(log_jsonl_path, changelog_csv_path)
+
+            logger.info("📝 Building summary/editorial letter...")
             # Construir carta editorial (resumen)
             self._build_summary_md(summary_md_path, docname=stem, jsonl_path=log_jsonl_path)
+
+            logger.info("💾 Saving exports to database...")
             # Guardar exports
             with session_scope() as session:
                 session.add_all(
@@ -255,6 +284,8 @@ class Worker:
                             obj.get("sentence", ""),
                         ]
                         writer.writerow(row)
+            except FileNotFoundError:
+                pass
 
     def _build_summary_md(self, summary_path: Path, *, docname: str, jsonl_path: Path) -> None:
         import json

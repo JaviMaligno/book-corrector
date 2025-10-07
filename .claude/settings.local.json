@@ -37,7 +37,8 @@
       "Bash(timeout 120 docker-compose -f docker-compose.dev.yml logs web)",
       "Bash(timeout:*)",
       "Bash(npm install)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(docker cp:*)"
     ],
     "deny": [],
     "ask": []

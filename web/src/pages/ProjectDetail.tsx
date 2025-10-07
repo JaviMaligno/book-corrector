@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useState } from 'react'
 
@@ -36,16 +36,21 @@ export default function ProjectDetail(){
   const run = useMutation({
     mutationFn: async () => {
       const docIds = selectedDocs.length > 0 ? selectedDocs : data?.documents?.map(d => d.id) || []
-      return (await api.post(`/runs`, {
+      const response = await api.post(`/runs`, {
         project_id: projectId,
         document_ids: docIds,
         mode: runMode,
         use_ai: useAi
-      })).data as { run_id: string }
+      })
+      return response.data as { run_id: string }
     },
     onSuccess: (r: any) => {
       nav(`/runs/${r.run_id}`)
       setSelectedDocs([])
+    },
+    onError: (error: any) => {
+      console.error('Error creating run:', error)
+      alert(error.response?.data?.detail || 'Error al iniciar corrección')
     }
   })
 

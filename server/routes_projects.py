@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from .deps import get_current_user
 from .db import get_session
-from .models import Project, User
+from .models import Project, User, Document, Run
 
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -33,6 +33,25 @@ class ProjectUpdate(BaseModel):
     lang_variant: str | None = None
 
 
+class DocumentInfo(BaseModel):
+    id: str
+    name: str
+    status: str = "ready"
+
+
+class RunInfo(BaseModel):
+    id: str
+    status: str
+    created_at: str
+
+
+class ProjectDetail(BaseModel):
+    id: str
+    name: str
+    documents: list[DocumentInfo]
+    runs: list[RunInfo]
+
+
 @router.get("", response_model=list[Project])
 def list_projects(
     session: Session = Depends(get_session), current: User = Depends(get_current_user)
@@ -53,7 +72,7 @@ def create_project(
     return p
 
 
-@router.get("/{project_id}", response_model=Project)
+@router.get("/{project_id}", response_model=ProjectDetail)
 def get_project(
     project_id: str,
     session: Session = Depends(get_session),
@@ -62,7 +81,16 @@ def get_project(
     p = session.get(Project, project_id)
     if not p or p.owner_id != current.id:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
-    return p
+
+    # Get documents for this project
+    docs = session.exec(select(Document).where(Document.project_id == project_id)).all()
+    documents = [DocumentInfo(id=d.id, name=d.name, status="ready") for d in docs]
+
+    # Get runs for this project
+    runs_db = session.exec(select(Run).where(Run.project_id == project_id).order_by(Run.created_at.desc())).all()
+    runs = [RunInfo(id=r.id, status=r.status.value if hasattr(r.status, 'value') else str(r.status), created_at=r.created_at.isoformat()) for r in runs_db]
+
+    return ProjectDetail(id=p.id, name=p.name, documents=documents, runs=runs)
 
 
 @router.patch("/{project_id}", response_model=Project)

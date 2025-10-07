@@ -58,6 +58,9 @@ export const setupAuthInterceptor = () => {
   })
 }
 
+// Ejecutar el interceptor inmediatamente al cargar el módulo
+setupAuthInterceptor()
+
 // Funciones de autenticación
 export const authApi = {
   async register(data: RegisterData): Promise<AuthTokens> {

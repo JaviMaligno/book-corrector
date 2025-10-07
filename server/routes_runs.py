@@ -310,3 +310,33 @@ def get_summary_md(
         if os.path.basename(e.path).lower().endswith(".summary.md"):
             return FileResponse(e.path, filename=os.path.basename(e.path), media_type="text/markdown")
     raise HTTPException(status_code=404, detail="Carta de edición no encontrada")
+
+
+@router.get("/{run_id}/artifacts")
+def list_artifacts(
+    run_id: str, session: Session = Depends(get_session), current: User = Depends(get_current_user)
+):
+    """Alias de /exports que devuelve lista de nombres de archivo"""
+    run = session.get(Run, run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run no encontrado")
+    exps = session.exec(select(Export).where(Export.run_id == run_id)).all()
+    files = [os.path.basename(e.path) for e in exps if os.path.exists(e.path)]
+    return {"files": files}
+
+
+# Endpoint para descargar artifacts por nombre de archivo (para compatibilidad con frontend legacy)
+@router.get("/artifacts/{run_id}/{filename}")
+def download_artifact_by_filename(
+    run_id: str, filename: str, session: Session = Depends(get_session)
+):
+    """Download artifact by filename (legacy endpoint for frontend compatibility)"""
+    # Buscar el export que coincida con el nombre de archivo
+    exps = session.exec(select(Export).where(Export.run_id == run_id)).all()
+    for exp in exps:
+        if os.path.basename(exp.path) == filename:
+            if os.path.exists(exp.path):
+                return FileResponse(exp.path, filename=filename)
+            else:
+                raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    raise HTTPException(status_code=404, detail=f"Artifact not found: {filename}")
