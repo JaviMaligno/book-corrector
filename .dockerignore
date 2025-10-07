@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+.env
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Git
+.git/
+.gitignore
+
+# IDEs
+.vscode/
+.idea/
+.claude/
+
+# Outputs (will be mounted as volume)
+outputs/*
+
+# Test files
+tests/
+
+# Examples and samples
+examples/
+
+# Scripts
+scripts/
+
+# Documentation (except docs/ which we need)
+README.md
+CLAUDE.md
+.env.example
+
+# CI/CD
+.github/

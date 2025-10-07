@@ -8,7 +8,7 @@ from .text_utils import Token
 
 def load_base_prompt(path: str | None = None) -> str:
     if path is None:
-        p = Path("base-prompt.md")
+        p = Path("docs/base-prompt.md")
     else:
         p = Path(path)
     if p.exists():

@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      - STORAGE_DIR=/data
+    volumes:
+      - ./:/app
+      - api_data:/data
+    ports:
+      - "8000:8000"
+    command: ["uvicorn","server.main:app","--host","0.0.0.0","--port","8000","--reload"]
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    ports:
+      - "5173:5173"
+    working_dir: /app
+    volumes:
+      - ./web:/app
+    depends_on:
+      - api
+
+volumes:
+  api_data:
+

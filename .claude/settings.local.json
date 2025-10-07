@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run:*)",
+      "Bash(python:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(findstr:*)",
+      "Bash(.venv/Scripts/pip.exe install:*)",
+      "Bash(set RUN_GEMINI_INTEGRATION=1)",
+      "Bash(set GOOGLE_API_KEY=AIzaSyCJwDcNRrE0f1gwhnDUsM-bb6jMZT3XW7A)",
+      "Bash(cmd:*)",
+      "Bash(dir live.corrections.jsonl)",
+      "Bash(dir:*)",
+      "Bash(ren:*)",
+      "Bash(.venv\\Scripts\\python.exe -m corrector.cli:*)",
+      "Bash(for i in {1..10})",
+      "Bash(do echo \"Check $i:\")",
+      "Bash(done)",
+      "Bash(tasklist)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(move outputsoutput_test.docx testsoutputs )",
+      "Bash(move outputslog_test.jsonl testsoutputs )",
+      "Bash(move outputslive.corrected.docx testsoutputs )",
+      "Bash(move outputslive.corrections.jsonl testsoutputs)",
+      "Bash(move debug_gemini.py scripts )",
+      "Bash(move debug_gemini_verbose.py scripts )",
+      "Bash(move run_corrector.py scripts )",
+      "Bash(move monitor_progress.py scripts)",
+      "Bash(move:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

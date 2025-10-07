@@ -1,0 +1,35 @@
+from __future__ import annotations
+
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
+
+class MeLimits(BaseModel):
+    plan: str
+    max_runs_concurrent: int
+    max_docs_per_run: int
+    max_docs_concurrent: int
+    rate_limit_rpm: int
+    ai_enabled: bool
+
+
+class CreateRunRequest(BaseModel):
+    project_id: str
+    documents: List[str] = Field(default_factory=list)
+    mode: str = Field(default="rapido", pattern="^(rapido|profesional)$")
+    use_ai: bool = False
+
+
+class CreateRunResponse(BaseModel):
+    run_id: str
+    accepted_documents: List[str]
+    queued: int
+
+
+class RunStatusResponse(BaseModel):
+    run_id: str
+    status: str
+    processed_documents: int = 0
+    total_documents: int = 0
+

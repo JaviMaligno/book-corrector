@@ -79,6 +79,6 @@ El corrector es especialmente bueno detectando:
 
 Para ajustar el comportamiento del corrector:
 
-1. **Editar el prompt**: Modifica `base-prompt.md` en la raíz del proyecto
+1. **Editar el prompt**: Modifica `docs/base-prompt.md`
 2. **Ajustar chunking**: Usa `--chunk-words` para documentos muy largos
 3. **Cambiar modelo**: La variable `GEMINI_MODEL` en `.env`

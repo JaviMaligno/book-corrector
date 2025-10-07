@@ -37,7 +37,7 @@ cp .env.example .env
 
 ## 💻 Uso
 
-### Uso básico
+### Modo CLI
 
 ```bash
 # Corregir un documento (salida en outputs/)
@@ -47,7 +47,22 @@ python -m corrector.cli documento.docx
 python -m corrector.cli documento.docx --out corregido.docx --log correcciones.jsonl
 ```
 
-### Opciones avanzadas
+### Modo Servidor (REST API)
+
+```bash
+# Desarrollo local
+uvicorn server.main:app --reload
+
+# Docker (producción)
+docker-compose up -d
+
+# Docker (desarrollo con hot-reload)
+docker-compose -f docker-compose.dev.yml up
+```
+
+Ver documentación de API en `http://localhost:8000/docs`
+
+### Opciones avanzadas (CLI)
 
 ```bash
 # Sin generar el reporte DOCX
@@ -67,24 +82,27 @@ python -m corrector.cli documento.docx --no-preserve-format
 
 ```
 corrector/
-├── corrector/           # Código fuente
-│   ├── cli.py          # Interfaz de línea de comandos
-│   ├── engine.py       # Motor de procesamiento
-│   ├── model.py        # Integración con Gemini
-│   ├── prompt.py       # Gestión de prompts
-│   ├── text_utils.py   # Tokenización y utilidades
-│   ├── docx_utils.py   # Lectura/escritura de DOCX
-│   └── llm.py          # Cliente de Gemini
-├── tests/              # Tests
-│   ├── samples/        # Documentos para tests
+├── corrector/           # Motor de corrección
+│   ├── cli.py          # CLI
+│   ├── engine.py       # Procesamiento y chunking
+│   ├── model.py        # Integración Gemini
+│   ├── text_utils.py   # Tokenización
+│   └── docx_utils.py   # I/O de DOCX
+├── server/             # API REST
+│   ├── main.py         # FastAPI app
+│   ├── scheduler.py    # Scheduler fair-share
+│   ├── limits.py       # Cuotas por plan
+│   └── schemas.py      # Modelos Pydantic
+├── tests/
+│   ├── samples/        # Documentos de test
+│   ├── outputs/        # Salidas de test (gitignored)
 │   └── test_*.py       # Tests unitarios e integración
-├── outputs/            # Archivos generados (gitignored)
-├── examples/           # Documentos de ejemplo (solo ejemplo_*.docx)
-├── base-prompt.md      # Prompt base para Gemini
-├── settings.py         # Configuración
-├── .env               # Variables de entorno (gitignored)
-├── .env.example       # Plantilla de configuración
-└── .gitignore         # Excluye todos los .docx excepto tests/samples y ejemplos
+├── docs/               # Documentación
+│   └── base-prompt.md  # Prompt de Gemini
+├── outputs/            # Salidas de producción (gitignored)
+├── Dockerfile          # Imagen Docker multi-stage
+├── docker-compose.yml  # Despliegue producción
+└── docker-compose.dev.yml  # Desarrollo con hot-reload
 ```
 
 **Nota**: Los documentos `.docx` de usuario no se trackean en git. Solo se incluyen documentos de ejemplo específicos en `examples/ejemplo_*.docx` y muestras de test en `tests/samples/`.
@@ -96,6 +114,8 @@ Por defecto, los archivos se guardan en `outputs/`:
 - `documento.corrected.docx` - Documento corregido
 - `documento.corrections.jsonl` - Log detallado en JSON (una corrección por línea)
 - `documento.corrections.docx` - Informe con tabla formateada
+ - `documento.changelog.csv` - CSV persistente del log
+ - `documento.summary.md` - Carta de edición con métricas y motivos
 
 ### Formato del log JSONL
 
@@ -136,7 +156,44 @@ RUN_GEMINI_INTEGRATION=0
 
 ### Personalizar el Prompt
 
-Edita `base-prompt.md` para ajustar las instrucciones de corrección.
+Edita `docs/base-prompt.md` para ajustar las instrucciones de corrección.
+
+## 🐋 Docker
+
+### Configuración
+
+Crea archivo `.env`:
+```bash
+GOOGLE_API_KEY=tu_api_key_aqui
+GEMINI_MODEL=gemini-2.5-flash
+DEMO_PLAN=free
+SYSTEM_MAX_WORKERS=2
+```
+
+### Comandos Docker
+
+```bash
+# Construir imagen
+docker-compose build
+
+# Ejecutar en background
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f corrector-api
+
+# Detener
+docker-compose down
+```
+
+### Desarrollo con Docker
+
+```bash
+# Hot-reload automático
+docker-compose -f docker-compose.dev.yml up
+```
+
+Los cambios en código se reflejan automáticamente sin reconstruir imagen.
 
 ## 🧪 Tests
 
@@ -144,8 +201,18 @@ Edita `base-prompt.md` para ajustar las instrucciones de corrección.
 # Tests unitarios (sin API)
 pytest tests/test_text_utils.py tests/test_engine_apply.py
 
+## 📌 Progreso
+
+- Checklists vivos del proyecto (se actualizan con cada cambio):
+  - Backend: progress/backend-checklist.md
+  - Core: progress/core-checklist.md
+
+
 # Tests con mock de Gemini
 pytest tests/test_gemini_fake.py
+
+# Tests del servidor
+pytest tests/test_server_basic.py
 
 # Tests de integración (requiere API key y RUN_GEMINI_INTEGRATION=1)
 pytest tests/test_gemini_live.py
