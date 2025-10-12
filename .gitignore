@@ -27,8 +27,10 @@ storage/
 
 # Database
 local.db
+*.bak
 
 # Documents
 *.docx
 *.zip
 *.jsonl
+temp_run_export/

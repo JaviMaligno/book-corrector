@@ -40,7 +40,8 @@
       "Bash(docker exec:*)",
       "Bash(docker cp:*)",
       "Read(//c/tmp/**)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(tar:*)"
     ],
     "deny": [],
     "ask": []

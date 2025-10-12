@@ -32,7 +32,6 @@ export default function Layout(){
           <div className="flex items-center gap-4">
             <nav className="flex gap-2">
               {tab('/projects', 'Proyectos')}
-              {tab('/viewer', 'Visor JSONL')}
             </nav>
             {isAuthenticated ? (
               <button

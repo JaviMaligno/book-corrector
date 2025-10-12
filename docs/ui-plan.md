@@ -19,18 +19,21 @@ Este documento consolida el plan existente del frontend (docs/frontend-plan.md) 
 - API: FastAPI; endpoints de proyectos, upload, runs, artifacts y nuevos endpoints de revisión (sección 6).
 
 ## 3) Flujos y Pantallas
-- Visor JSONL
-  - Carga local o `?jsonlUrl=` apuntando a `/artifacts/{runId}/{file}.jsonl`.
-  - Vistas: Inline, Antes‑Después, Lado a lado; búsqueda por palabra/razón/contexto.
-  - Botón “Entrar en modo revisión” cuando haya métricas mínimas y metadatos suficientes.
+- Tabla de Correcciones (Vista Principal)
+  - **Diseño tipo DOCX**: Tabla profesional con columnas: # | Frase Completa | Original → Corregido | Motivo | Línea
+  - **Frase completa de contexto**: Mostrar la frase entera donde ocurre la corrección (campo `sentence`), NO solo 3 tokens alrededor
+  - **Resaltado inline**: Dentro de la frase, resaltar en rojo tachado el texto original y en verde el texto corregido
+  - **Búsqueda y filtros**: Por palabra, motivo, categoría, tipo de error
+  - **Vistas alternativas**: Inline (por defecto), Antes/Después (apilado), Lado a lado
+  - **Enlace a revisión**: Botón para entrar en modo revisión interactiva
 - Proyectos y Runs
-  - Proyectos: creación/listado; detalle con subida múltiple y “Corregir”.
-  - RunDetail: estado con polling y enlaces; salto a `/runs/:runId/review` si existen `*.corrections.jsonl`.
-- Revisión (tri‑panel)
+  - Proyectos: creación/listado; detalle con subida múltiple y "Corregir".
+  - RunDetail: estado con polling y enlaces; salto a tabla de correcciones o `/runs/:runId/review` si existen `*.corrections.jsonl`.
+- Revisión (tri‑panel) - Futuro
   - Lista/tabla filtrable (regla, categoría, documento, confianza, estado).
   - Comparado con scroll sincronizado: original (izq) vs corregido (der) y vista inline en contexto.
   - Panel lateral: motivo, explicación breve, referencia (RAE/DPD/Fundéu), confianza y acciones Aceptar/Rechazar.
-  - Barras: superior con contadores (aceptadas/rechazadas/pendientes), toggle “Aceptar por defecto”, botones “Aceptar/Rechazar restantes”; inferior con navegación y atajos (A/R/U).
+  - Barras: superior con contadores (aceptadas/rechazadas/pendientes), toggle "Aceptar por defecto", botones "Aceptar/Rechazar restantes"; inferior con navegación y atajos (A/R/U).
 
 ## 4) Componentes (FE)
 - Existentes: `CorrectionsTable`, `ContextSnippet` (extender con selección y dif fino).
@@ -43,11 +46,32 @@ Este documento consolida el plan existente del frontend (docs/frontend-plan.md) 
 - Historial/undo por lote y reinicio de sesión de revisión.
 
 ## 6) Datos e Integración Backend
+- **Formato JSONL de correcciones** (`*.corrections.jsonl`):
+  ```json
+  {
+    "token_id": 2,
+    "line": 1,
+    "original": "baca",
+    "corrected": "vaca",
+    "reason": "Confusión baca/vaca (techo del coche)",
+    "context": "La baca del",        // 3 tokens alrededor (legacy)
+    "sentence": "La baca del coche estaba llena de equipaje.",  // FRASE COMPLETA (nuevo campo requerido)
+    "chunk_index": 0,
+    "suggestion_id": "abc123",       // hash estable (futuro)
+    "category": "confusión léxica",  // categoría de error (futuro)
+    "confidence": 0.95               // confianza del modelo (futuro)
+  }
+  ```
+- **Extracción de sentence** (Backend):
+  - En `engine.py`, antes de guardar cada corrección, extraer la frase completa donde ocurre el error
+  - Usar delimitadores de frase: `.`, `!`, `?`, `;`, o `\n\n`
+  - Buscar hacia atrás y adelante desde `token_id` hasta encontrar inicio/fin de frase
+  - Almacenar en campo `sentence` del JSONL
 - Identificadores estables por sugerencia: `suggestion_id` (hash de `doc_id|token_id|original|corrected|rule_id`), `token_id`, `sentence`, offsets si hay.
-- Modelo de revisión
+- Modelo de revisión (futuro)
   - `review_sessions(id, run_id, user_id, default_accept, created_at)`.
   - `review_decisions(id, session_id, suggestion_id, action, created_at)` con `action ∈ {accept,reject,unset}`.
-- Endpoints propuestos
+- Endpoints propuestos (futuro)
   - `GET /runs/{id}/suggestions` → JSON (o servir `*.corrections.jsonl`) con `suggestion_id`, `rule_id`, `category`, `confidence`.
   - `POST /runs/{id}/reviews` → guardar/actualizar decisiones (array de `{suggestion_id, action}`).
   - `POST /runs/{id}/reviews/bulk` → aplicar por filtros (`category`, `rule_id`, `confidence_min`, `doc_id`, `state=pending`).
@@ -77,11 +101,18 @@ Este documento consolida el plan existente del frontend (docs/frontend-plan.md) 
 | 🔴 Reescrituras | Reformulaciones completas | ❌ | ✅ (confianza ≥ 0.8) |
 
 ## 10) Roadmap y Entregables
-- S1: Base SPA, paleta, Visor JSONL; CorrectionsTable con vistas; carga remota `?jsonlUrl=`.
-- S2: Proyectos, upload, runs y artifacts (polling); `RunDetail` enlaza visor y review.
-- S3: UI de Revisión tri‑panel (A/R individual, panel lateral, filtros, atajos, scroll sincronizado, lista virtualizada).
-- S4: Persistencia en backend de decisiones; `preview`/`finalize`; bulk por filtros; export dataset.
-- S5: Perfiles de auto‑aplicación, umbral de confianza, undo/redo por lote; mejoras UX; SSE/WebSocket opcional.
+- **S1 (MVP actual)**:
+  - ✅ Base SPA, paleta básica, rutas de proyectos y runs
+  - 🔄 **Backend**: Añadir campo `sentence` (frase completa) al JSONL en `engine.py`
+  - 🔄 **Frontend**: Tabla de correcciones tipo DOCX con frase completa y resaltado inline
+  - 🔄 **Integración**: `RunDetail` muestra enlace a tabla de correcciones por run
+- **S2**: Mejoras de tabla
+  - Búsqueda y filtros avanzados (por palabra, motivo, categoría)
+  - Vistas alternativas (Inline, Antes/Después, Lado a lado)
+  - Exportar tabla a PDF o DOCX con formato
+- **S3**: UI de Revisión tri‑panel (A/R individual, panel lateral, filtros, atajos, scroll sincronizado, lista virtualizada)
+- **S4**: Persistencia en backend de decisiones; `preview`/`finalize`; bulk por filtros; export dataset
+- **S5**: Perfiles de auto‑aplicación, umbral de confianza, undo/redo por lote; mejoras UX; SSE/WebSocket opcional
 
 ## 11) Pruebas, Rendimiento y Observabilidad
 - FE: pruebas de componentes (diff, panel), accesibilidad básica, smoke e2e (carga JSONL, A/R, preview).

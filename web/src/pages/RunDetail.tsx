@@ -20,6 +20,8 @@ export default function RunDetail(){
 
   const files = artifacts.data?.files || []
 
+  const hasCorrections = files.some(f => f.endsWith('.corrections.jsonl'))
+
   return (
     <div className="space-y-6">
       <section className="card p-4">
@@ -27,22 +29,32 @@ export default function RunDetail(){
         <div className="text-sm text-gray-600">{run.data?.id} — {run.data?.status}</div>
       </section>
 
+      {hasCorrections && (
+        <section className="card p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-medium text-blue-900">Correcciones disponibles</h3>
+              <p className="text-sm text-gray-600">Haz clic en el botón para ver el detalle</p>
+            </div>
+            <a
+              href={`/runs/${runId}/corrections`}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+            >
+              Ver tabla de correcciones
+            </a>
+          </div>
+        </section>
+      )}
+
       <section className="card p-4">
         <h3 className="text-base font-medium mb-2">Artefactos</h3>
         {!files.length && <div className="text-gray-500">Aún no hay artefactos.</div>}
         <ul className="list-disc pl-6">
           {files.map(f => {
             const href = `${API_URL}/artifacts/${runId}/${encodeURIComponent(f)}`
-            const isJsonl = f.toLowerCase().endsWith('.jsonl')
-            const viewer = `/?jsonlUrl=${encodeURIComponent(href)}`
             return (
-              <li key={f} className="text-sm flex items-center gap-3">
+              <li key={f} className="text-sm">
                 <a className="text-brand-ink underline" href={href} target="_blank" rel="noreferrer">{f}</a>
-                {isJsonl && (
-                  <a className="px-2 py-1 border border-brand-ink/20 rounded text-brand-ink hover:bg-brand-ink/10" href={viewer}>
-                    Ver en visor
-                  </a>
-                )}
               </li>
             )
           })}

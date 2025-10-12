@@ -167,33 +167,40 @@ class Worker:
 
             logger.info("💾 Saving exports to database...")
             # Guardar exports
-            with session_scope() as session:
-                session.add_all(
-                    [
-                        Export(run_id=task.run_id, kind=ExportKind.docx, path=str(corrected_path)),
-                        Export(run_id=task.run_id, kind=ExportKind.jsonl, path=str(log_jsonl_path)),
-                        Export(run_id=task.run_id, kind=ExportKind.docx, path=str(log_docx_path)),
-                        Export(run_id=task.run_id, kind=ExportKind.csv, path=str(changelog_csv_path)),
-                        Export(run_id=task.run_id, kind=ExportKind.md, path=str(summary_md_path)),
-                    ]
-                )
-                rd = session.exec(
-                    select(RunDocument).where(
-                        RunDocument.run_id == task.run_id, RunDocument.document_id == task.document_id
+            try:
+                with session_scope() as session:
+                    session.add_all(
+                        [
+                            Export(run_id=task.run_id, kind=ExportKind.docx, path=str(corrected_path)),
+                            Export(run_id=task.run_id, kind=ExportKind.jsonl, path=str(log_jsonl_path)),
+                            Export(run_id=task.run_id, kind=ExportKind.docx, path=str(log_docx_path)),
+                            Export(run_id=task.run_id, kind=ExportKind.csv, path=str(changelog_csv_path)),
+                            Export(run_id=task.run_id, kind=ExportKind.md, path=str(summary_md_path)),
+                        ]
                     )
-                ).first()
-                if rd:
-                    rd.status = RunDocumentStatus.completed
-                    session.add(rd)
-                # Update run status if all docs done
-                rdocs = session.exec(select(RunDocument).where(RunDocument.run_id == task.run_id)).all()
-                if rdocs and all(r.status == RunDocumentStatus.completed for r in rdocs):
-                    r = session.get(Run, task.run_id)
-                    if r:
-                        r.status = RunStatus.completed
-                        session.add(r)
-        except Exception:
-            self._mark_failed(task, reason="engine error")
+                    rd = session.exec(
+                        select(RunDocument).where(
+                            RunDocument.run_id == task.run_id, RunDocument.document_id == task.document_id
+                        )
+                    ).first()
+                    if rd:
+                        rd.status = RunDocumentStatus.completed
+                        session.add(rd)
+                    # Update run status if all docs done
+                    rdocs = session.exec(select(RunDocument).where(RunDocument.run_id == task.run_id)).all()
+                    if rdocs and all(r.status == RunDocumentStatus.completed for r in rdocs):
+                        r = session.get(Run, task.run_id)
+                        if r:
+                            r.status = RunStatus.completed
+                            session.add(r)
+                logger.info("✅ Exports saved successfully")
+            except Exception as db_error:
+                logger.exception("❌ Database error while saving exports: %s", db_error)
+                self._mark_failed(task, reason=f"database error: {str(db_error)}")
+                raise
+        except Exception as e:
+            logger.exception("❌ Processing error: %s", e)
+            self._mark_failed(task, reason=f"engine error: {str(e)}")
 
     def _mark_failed(self, task: DocumentTask, reason: str) -> None:
         from .db import session_scope
