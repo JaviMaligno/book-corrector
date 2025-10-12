@@ -195,6 +195,111 @@ docker-compose -f docker-compose.dev.yml up
 
 Los cambios en código se reflejan automáticamente sin reconstruir imagen.
 
+## 📦 Procesamiento por Lotes (Batch Processing)
+
+El servidor API soporta procesamiento de múltiples documentos en un solo run, con rate limiting inteligente y retry automático.
+
+### Características del Batch Processing
+
+- ✅ **Rate Limiting automático**: Respeta límites de API según modelo
+  - `gemini-2.5-pro`: 2 req/min (30s entre requests)
+  - `gemini-2.5-flash`: 15 req/min (4s entre requests)
+- ✅ **Retry con backoff exponencial**: 3 reintentos con delays de 2s, 4s, 8s
+- ✅ **Fallback inteligente**: Si pro falla, usa flash solo para ese chunk
+- ✅ **Monitoreo en tiempo real**: API de status con progreso
+- ✅ **Descarga de resultados**: Extrae solo archivos `.corrections.docx`
+
+### Ejemplo de Uso
+
+```python
+import requests
+from pathlib import Path
+import time
+
+API_URL = "http://localhost:8001"
+EMAIL = "demo@example.com"
+PASSWORD = "demo123"
+
+# 1. Autenticar
+resp = requests.post(f"{API_URL}/auth/login",
+                     json={"email": EMAIL, "password": PASSWORD})
+token = resp.json()["access_token"]
+headers = {"Authorization": f"Bearer {token}"}
+
+# 2. Obtener proyecto
+resp = requests.get(f"{API_URL}/projects", headers=headers)
+project_id = resp.json()[0]["id"]
+
+# 3. Subir documentos (batch)
+docx_files = sorted(Path("documentos").glob("*.docx"))
+files_to_upload = [
+    ("files", (f.name, open(f, "rb"),
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+    for f in docx_files
+]
+resp = requests.post(
+    f"{API_URL}/projects/{project_id}/documents/upload",
+    headers=headers,
+    files=files_to_upload
+)
+for _, (_, f, _) in files_to_upload:
+    f.close()
+
+document_ids = [doc["id"] for doc in resp.json()]
+print(f"✅ Subidos {len(document_ids)} documentos")
+
+# 4. Crear run con todos los documentos
+resp = requests.post(
+    f"{API_URL}/runs",
+    headers=headers,
+    json={"project_id": project_id, "document_ids": document_ids, "use_ai": True}
+)
+run_id = resp.json()["run_id"]
+print(f"📋 Run creado: {run_id}")
+
+# 5. Monitorear progreso
+while True:
+    resp = requests.get(f"{API_URL}/runs/{run_id}", headers=headers)
+    status_data = resp.json()
+    status = status_data["status"]
+    processed = status_data.get("processed_documents", 0)
+    total = status_data.get("total_documents", 0)
+
+    print(f"[{processed}/{total}] Status: {status}")
+
+    if status in ["completed", "failed"]:
+        break
+
+    time.sleep(10)
+
+# 6. Descargar correcciones
+resp = requests.get(f"{API_URL}/runs/{run_id}/exports", headers=headers)
+exports = resp.json()
+
+corrections_files = [e for e in exports if e["category"] == "log_docx"]
+output_dir = Path("correcciones_finales")
+output_dir.mkdir(exist_ok=True)
+
+for export in corrections_files:
+    filename = export["name"]
+    resp = requests.get(f"{API_URL}/artifacts/{run_id}/{filename}", headers=headers)
+
+    with open(output_dir / filename, "wb") as f:
+        f.write(resp.content)
+
+    print(f"📥 Descargado: {filename}")
+
+print(f"✅ Completado! {len(corrections_files)} archivos en {output_dir}")
+```
+
+### Tiempos Estimados
+
+Con rate limiting activo:
+- **gemini-2.5-pro**: ~30s por documento (120 docs/hora)
+- **gemini-2.5-flash**: ~4s por documento (900 docs/hora)
+
+Para 41 documentos con pro: ~20 minutos
+
 ## 🧪 Tests
 
 ```bash

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import logging
 from typing import Dict
 
 try:
@@ -12,6 +13,14 @@ except Exception:  # pragma: no cover - only needed when running the server
     CORSMiddleware = None  # type: ignore
 
 from sqlmodel import select
+
+# Configure logging for the corrector engine
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%H:%M:%S',
+    force=True  # Override any existing configuration
+)
 
 from .db import init_db, session_scope
 from .limits import FREE, PREMIUM, SYSTEM_MAX_WORKERS
@@ -34,7 +43,14 @@ def create_app() -> "FastAPI":  # type: ignore
     if CORSMiddleware is not None:
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"],
+            allow_origins=[
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://localhost:8080",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:8080"
+            ],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
@@ -62,6 +78,24 @@ def create_app() -> "FastAPI":  # type: ignore
             ai_enabled=limits.ai_enabled,
         )
 
+    # Artifacts download endpoint (global, not under /runs prefix)
+    @app.get("/artifacts/{run_id}/{filename}")
+    def download_artifact(run_id: str, filename: str):
+        from fastapi.responses import FileResponse
+        from .models import Export
+        from .db import engine
+        from sqlmodel import Session
+
+        with Session(engine) as session:
+            exps = session.exec(select(Export).where(Export.run_id == run_id)).all()
+            for exp in exps:
+                if os.path.basename(exp.path) == filename:
+                    if os.path.exists(exp.path):
+                        return FileResponse(exp.path, filename=filename)
+                    else:
+                        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+            raise HTTPException(status_code=404, detail=f"Artifact not found: {filename}")
+
     # Routers
     app.include_router(auth_router)
     app.include_router(projects_router)
@@ -78,6 +112,26 @@ def create_app() -> "FastAPI":  # type: ignore
         @app.on_event("startup")
         def _start_worker():  # pragma: no cover
             print("🚀 Starting worker...")
+
+            # Ensure demo user exists
+            try:
+                with session_scope() as session:
+                    from .auth import hash_password
+                    demo_user = session.exec(select(User).where(User.email == "demo@example.com")).first()
+                    if not demo_user:
+                        demo_user = User(
+                            email="demo@example.com",
+                            password_hash=hash_password("demo123"),
+                            role="free"
+                        )
+                        session.add(demo_user)
+                        session.commit()
+                        print("✅ Created demo user: demo@example.com / demo123")
+                    else:
+                        print("✅ Demo user already exists")
+            except Exception as e:
+                print(f"⚠️  Error ensuring demo user: {e}")
+
             # Rebuild the in-memory scheduler from queued tasks in DB
             try:
                 with session_scope() as session:

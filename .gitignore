@@ -11,6 +11,7 @@ htmlcov/
 venv/
 *.txt
 *lock.json
+uv.lock
 # Build
 dist/
 build/
@@ -26,3 +27,8 @@ storage/
 
 # Database
 local.db
+
+# Documents
+*.docx
+*.zip
+*.jsonl

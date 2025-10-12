@@ -6,6 +6,8 @@ services:
       dockerfile: server/Dockerfile
     environment:
       - STORAGE_DIR=/data
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
     volumes:
       - api_data:/data
     ports:

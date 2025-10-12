@@ -75,12 +75,13 @@ def process_paragraphs(
     total_chunks = len(ranges)
     logger.info(f"Procesando documento en {total_chunks} chunk(s)...")
     for chunk_idx, (start, end) in enumerate(ranges):
-        logger.info(f"Procesando chunk {chunk_idx + 1}/{total_chunks} (tokens {start}-{end})...")
+        logger.info(f"📄 Procesando chunk {chunk_idx + 1}/{total_chunks} (tokens {start}-{end})...")
         slice_tokens = [Token(i - start, t.text, t.start, t.end, t.kind, t.line) for i, t in enumerate(tokens[start:end], start=start)]
         # Local ids start from 0; map back to global by +start
         local_tokens = [Token(i - start, t.text, t.start, t.end, t.kind, t.line) for i, t in enumerate(tokens[start:end], start=start)]
+        logger.info(f"🔄 Enviando chunk {chunk_idx + 1}/{total_chunks} al corrector...")
         corrections = corrector.correct_tokens(local_tokens)
-        logger.info(f"Chunk {chunk_idx + 1}/{total_chunks}: {len(corrections)} correcciones encontradas")
+        logger.info(f"✅ Chunk {chunk_idx + 1}/{total_chunks}: {len(corrections)} correcciones encontradas")
         for c in corrections:
             global_id = start + c.token_id
             if 0 <= global_id < len(tokens):
@@ -104,12 +105,23 @@ def process_paragraphs(
                     logger.warning(f"Skipping suspicious correction: {tok.kind} token '{tok.text}' -> '{c.replacement}'")
                     continue
 
+                # Detectar si es una eliminación (replacement vacío o muy diferente)
+                corrected_text = c.replacement
+                reason_text = c.reason
+
+                # Si el replacement parece ser el siguiente token, probablemente es una eliminación
+                if global_id + 1 < len(tokens) and c.replacement.strip() == tokens[global_id + 1].text.strip():
+                    corrected_text = ""
+                    reason_text = f"[ELIMINACIÓN] {c.reason}"
+                elif c.replacement.strip() == "":
+                    reason_text = f"[ELIMINACIÓN] {c.reason}"
+
                 entry = LogEntry(
                     token_id=global_id,
                     line=tok.line,
                     original=tok.text,
-                    corrected=c.replacement,
-                    reason=c.reason,
+                    corrected=corrected_text,
+                    reason=reason_text,
                     context=build_context(tokens, global_id, radius=3),
                     chunk_index=chunk_idx,
                     sentence=build_sentence_context(tokens, global_id),

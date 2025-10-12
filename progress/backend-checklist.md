@@ -30,11 +30,29 @@ Estado de alto nivel del backend (API, datos, colas, límites, despliegue). Mant
 - [x] Integrar `corrector.engine` (HeuristicCorrector) para procesar DOCX/TXT desde `Document.path`
 - [x] Generar y guardar exportables (JSONL/DOCX) por `RunDocument` (tabla `exports`)
 - [x] CSV del log y carta editorial (`summary.md`) como exportables vinculados al `Run`
+ 
+## Revisión interactiva y feedback (nuevo)
+- [ ] Modelo de datos de revisión: `review_sessions` y `review_decisions` (token_id/suggestion_id, accepted|rejected|unset)
+- [ ] `GET /runs/{id}/suggestions` (o exponer directo `*.corrections.jsonl` con metadata estable)
+- [ ] `POST /runs/{id}/reviews` (guardar decisiones), `POST /runs/{id}/reviews/bulk`
+- [ ] `GET /runs/{id}/preview` (aplicar decisiones sobre texto) y `POST /runs/{id}/finalize` (export final)
+- [ ] `GET /runs/{id}/reviews/export` (dataset JSONL/CSV para entrenamiento)
+- [ ] Agregador “apply decisions” estable por `token_id` y orden de aparición
+- [ ] `suggestion_id` estable (hash doc_id|token_id|original|corrected|rule_id) y validación de idempotencia
+- [ ] Filtros de bulk por `category`, `rule_id`, `doc_id`, `confidence_min`, `state=pending`
+- [ ] Endpoint de previsualización “dry run” con streaming (HTML/TXT) y fallback DOCX temporal
+- [ ] Auditoría/Historial de decisiones por sesión (quién, cuándo, lote)
+- [ ] Export de dataset con anonimización y schema SFT/preferencias
 
 ## Detección/estilo y premium
 - [ ] Detección de idioma/variante en ingesta/run (heurísticos) y guardado en `projects`/`runs`
 - [ ] Perfil de estilo heurístico base y endpoint `/projects/{id}/style/auto-infer` (premium)
 - [ ] Límite de presupuesto IA por plan y telemetría mínima
+
+## Entrenamiento con feedback (modelos)
+- [ ] Evaluar FT: Gemini 2.5 Flash (no FT directo) vs. OSS (Llama/Mistral) con LoRA/QLoRA
+- [ ] Exportador de dataset SFT y preferencias (aceptadas vs rechazadas) anonimizado
+- [ ] Pipeline offline para entrenamiento OSS y carga de pesos adaptativos (cuando aplique)
 
 ## Seguridad y privacidad
 - [ ] JWT: refresh tokens, rotación y logout

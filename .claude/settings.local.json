@@ -38,7 +38,9 @@
       "Bash(timeout:*)",
       "Bash(npm install)",
       "Bash(docker exec:*)",
-      "Bash(docker cp:*)"
+      "Bash(docker cp:*)",
+      "Read(//c/tmp/**)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []

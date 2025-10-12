@@ -72,9 +72,15 @@ def upload_documents(
             status=DocumentStatus.ready,
         )
         session.add(doc)
-        session.commit()
-        session.refresh(doc)
         saved_docs.append(doc)
+
+    # Commit all documents at once
+    session.commit()
+
+    # Refresh all documents to get their generated IDs
+    for doc in saved_docs:
+        session.refresh(doc)
+
     return saved_docs
 
 

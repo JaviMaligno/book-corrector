@@ -18,3 +18,17 @@
 - [ ] SSE/WebSocket para progreso en tiempo real.
 - [ ] Visor DOCX (track changes) embebido o descarga mejorada.
 - [ ] CI/CD y previsualizaciones (PRs) del frontend.
+## Revisión interactiva (nuevo)
+- [ ] Ruta `/runs/:runId/review` y modo revisión desde visor.
+- [ ] Panel lateral con motivo y acciones Aceptar/Rechazar por corrección.
+- [ ] Toggle “Aceptar por defecto” + acciones masivas Aceptar/Rechazar restantes.
+- [ ] Estado de revisión en cliente (`ReviewProvider`) con contadores.
+- [ ] Previsualización local del documento aplicado (sin backend) cuando se cargue JSONL.
+- [ ] Integrar endpoints backend para decisiones (`POST /runs/{id}/reviews`, bulk y preview/finalize).
+- [ ] Exportar dataset de feedback desde UI (descarga `reviews.jsonl`).
+- [ ] Lista de correcciones virtualizada (rendimiento >10k entradas).
+- [ ] Scroll sincronizado en vista comparada Original↔Corregido.
+- [ ] Atajos de teclado (A/R/U, navegación ↑/↓).
+- [ ] Perfiles de auto‑aplicación (Seguro vs Revisar) y UI de filtro.
+- [ ] Simulación “dry run” de lotes antes de aplicar.
+- [ ] Undo/redo por lote y reinicio de sesión de revisión.
