@@ -47,20 +47,32 @@ python -m corrector.cli documento.docx
 python -m corrector.cli documento.docx --out corregido.docx --log correcciones.jsonl
 ```
 
-### Modo Servidor (REST API)
+### Modo Servidor (REST API + Frontend)
 
 ```bash
-# Desarrollo local
-uvicorn server.main:app --reload
-
-# Docker (producción)
-docker-compose up -d
-
-# Docker (desarrollo con hot-reload)
+# Desarrollo local con hot-reload (backend + frontend)
 docker-compose -f docker-compose.dev.yml up
+
+# Producción
+docker-compose up -d
 ```
 
-Ver documentación de API en `http://localhost:8000/docs`
+Una vez iniciado:
+- **Frontend**: `http://localhost:5173` - Interfaz web para gestionar proyectos y correcciones
+- **API**: `http://localhost:8001` - Documentación en `/docs`
+
+#### Funcionalidades del Frontend
+
+- ✅ **Autenticación**: Sistema de login/registro con JWT
+- ✅ **Gestión de Proyectos**: Crear, listar y gestionar proyectos de corrección
+- ✅ **Subida de Documentos**: Upload múltiple de archivos DOCX
+- ✅ **Ejecución de Correcciones**: Crear runs y monitorear progreso en tiempo real
+- ✅ **Tabla de Correcciones**: Visualización profesional con 3 modos de vista:
+  - **Inline**: Contexto completo con original tachado → corregido resaltado
+  - **Apilado**: Original y corregido en columnas separadas con frase completa
+  - **Lado a lado**: Comparación visual del antes/después
+- ✅ **Búsqueda y Filtrado**: Buscar correcciones por palabra, motivo o contexto
+- ✅ **Descarga de Artefactos**: Acceso a documentos corregidos, logs JSONL y reportes DOCX
 
 ### Opciones avanzadas (CLI)
 
@@ -92,13 +104,26 @@ corrector/
 │   ├── main.py         # FastAPI app
 │   ├── scheduler.py    # Scheduler fair-share
 │   ├── limits.py       # Cuotas por plan
-│   └── schemas.py      # Modelos Pydantic
+│   ├── models.py       # SQLModel schemas
+│   ├── routes_*.py     # Endpoints organizados
+│   └── worker.py       # Procesamiento en background
+├── web/                # Frontend React
+│   ├── src/
+│   │   ├── components/ # CorrectionsTable, UI components
+│   │   ├── pages/      # Projects, RunDetail, CorrectionsView
+│   │   ├── contexts/   # AuthContext
+│   │   ├── lib/        # api, auth, types
+│   │   └── layouts/    # Layout principal
+│   ├── Dockerfile      # Imagen frontend
+│   └── vite.config.ts  # Configuración Vite
 ├── tests/
 │   ├── samples/        # Documentos de test
 │   ├── outputs/        # Salidas de test (gitignored)
 │   └── test_*.py       # Tests unitarios e integración
 ├── docs/               # Documentación
-│   └── base-prompt.md  # Prompt de Gemini
+│   ├── base-prompt.md  # Prompt de Gemini
+│   ├── frontend-plan.md # Plan y progreso del frontend
+│   └── ui-plan.md      # Plan detallado de UI
 ├── outputs/            # Salidas de producción (gitignored)
 ├── Dockerfile          # Imagen Docker multi-stage
 ├── docker-compose.yml  # Despliegue producción

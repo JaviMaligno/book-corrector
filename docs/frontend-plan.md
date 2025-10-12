@@ -36,12 +36,162 @@ Este plan concreta una SPA ligera para operar “por proyecto”, alineada con d
 ### Endpoints, modelo y dataset
 - Detalles completos en `docs/ui-plan.md` (endpoints de `suggestions`, `reviews`, `bulk`, `preview`, `finalize` y `reviews/export`; modelo `review_sessions/review_decisions`; dataset SFT/preferencias y privacidad).
 
-## Roadmap (4–6 semanas)
-- S1: Scaffold SPA, paleta y visor JSONL.
-- S2: Proyectos, upload, runs y artefactos (polling).
-- S3: CorrectionsTable conectada a API, filtros/segmentación.
-- S3.5: UI de Revisión (A/R individual, panel lateral, bulk y “aceptar por defecto”).
-- S4: Persistencia backend de decisiones, preview/finalize y export de dataset.
-- S5: Glosario/estilo básico, modo Rápido/Profesional, pulido UX.
-- Extra: SSE/WebSocket, visor DOCX, autenticación guest/usuario.
-- Extra: SSE/WebSocket, visor DOCX, autenticación guest/usuario.
+## Roadmap y Progreso
+
+### ✅ Completado (S1-S2)
+- [x] Scaffold SPA con Vite + React + TypeScript + Tailwind
+- [x] Paleta de colores y diseño básico
+- [x] Sistema de autenticación (login/register con JWT)
+- [x] Gestión de proyectos (crear, listar, detalle)
+- [x] Subida de documentos (upload múltiple)
+- [x] Runs y monitoreo con polling
+- [x] Listado de artefactos
+- [x] **CorrectionsView**: Página de visualización de correcciones
+- [x] **CorrectionsTable**: Componente con 3 modos de vista:
+  - Inline (contexto completo con original tachado → corregido)
+  - Apilado (columnas separadas con frase completa)
+  - Lado a lado (comparación antes/después)
+- [x] Búsqueda en tiempo real (palabra, motivo, contexto)
+- [x] Integración con API autenticada (axios interceptors)
+- [x] Descarga de artefactos (DOCX corregidos, logs JSONL, reportes)
+
+### 🚧 En Progreso (S3)
+- [ ] Filtros avanzados (por tipo de error, línea, chunk)
+- [ ] Segmentación y navegación por categorías de corrección
+- [ ] Estadísticas y métricas del run (total errores, tipos más comunes)
+
+### 📋 Pendiente (S3.5-S5)
+- [ ] UI de Revisión interactiva:
+  - [ ] Aceptar/Rechazar individual
+  - [ ] Panel lateral con contexto expandido
+  - [ ] Operaciones en bulk
+  - [ ] "Aceptar por defecto" con excepciones
+- [ ] Backend de decisiones:
+  - [ ] Persistencia de review_sessions y review_decisions
+  - [ ] Preview del documento final
+  - [ ] Finalize y aplicación de cambios
+  - [ ] Export de dataset (SFT/preferencias)
+- [ ] Modo Rápido vs Profesional:
+  - [ ] Glosario personalizado
+  - [ ] Paquetes de reglas
+  - [ ] Configuración de estilo
+- [ ] Pulido UX:
+  - [ ] Mejoras de accesibilidad
+  - [ ] Atajos de teclado
+  - [ ] Onboarding/tour
+
+### 🎁 Extras Futuros
+- [ ] SSE/WebSocket para updates en tiempo real
+- [ ] Visor DOCX integrado
+- [ ] Autenticación guest/usuario (actualmente solo usuario registrado)
+- [ ] Export a otros formatos (PDF, Markdown)
+
+## Checklist Detallado por Componente
+
+### Autenticación (`web/src/contexts/AuthContext.tsx`, `web/src/lib/auth.ts`)
+- [x] AuthContext con login/register/logout
+- [x] Almacenamiento de tokens en localStorage
+- [x] Interceptor axios para añadir Authorization header automáticamente
+- [x] getCurrentUser para verificar sesión
+- [x] Manejo de errores 401/403
+- [ ] Refresh token automático
+- [ ] Remember me / persistent session
+
+### Páginas Core
+#### Projects (`web/src/pages/Projects.tsx`)
+- [x] Lista de proyectos con polling
+- [x] Crear nuevo proyecto (nombre, variante, modo)
+- [x] Navegación a detalle de proyecto
+- [x] Protección de ruta (solo autenticados)
+- [ ] Editar proyecto existente
+- [ ] Eliminar proyecto
+- [ ] Búsqueda/filtrado de proyectos
+
+#### ProjectDetail (`web/src/pages/ProjectDetail.tsx`)
+- [x] Vista de detalle del proyecto
+- [x] Subida múltiple de documentos DOCX
+- [x] Lista de documentos del proyecto
+- [x] Crear run con documentos seleccionados
+- [x] Lista de runs del proyecto
+- [x] Navegación a detalle de run
+- [ ] Eliminar documentos
+- [ ] Renombrar documentos
+- [ ] Preview de documentos
+
+#### RunDetail (`web/src/pages/RunDetail.tsx`)
+- [x] Estado del run (queued/processing/completed)
+- [x] Polling automático cada 2s
+- [x] Progreso (procesados/total)
+- [x] Lista de artefactos generados
+- [x] Card destacado si hay correcciones disponibles
+- [x] Botón para ver tabla de correcciones
+- [x] Links de descarga de artefactos
+- [ ] Cancelar run en progreso
+- [ ] Log de errores si run falla
+- [ ] Métricas del run (tiempo, tokens, costo)
+
+#### CorrectionsView (`web/src/pages/CorrectionsView.tsx`)
+- [x] Carga de archivo .corrections.jsonl desde artifacts
+- [x] Parsing de JSONL a array de correcciones
+- [x] Integración con CorrectionsTable
+- [x] Manejo de estados de carga/error
+- [x] Título con ID del run
+- [x] Autenticación correcta (usa api axios con interceptor)
+- [ ] Paginación si hay muchas correcciones
+- [ ] Descarga del JSONL filtrado
+- [ ] Compartir vista de correcciones (URL pública)
+
+### Componentes de UI
+#### CorrectionsTable (`web/src/components/CorrectionsTable.tsx`)
+- [x] Modo Inline (contexto completo con resaltado)
+- [x] Modo Apilado (columnas original/corregido)
+- [x] Modo Lado a lado (comparación visual)
+- [x] Selector de modo de vista
+- [x] Búsqueda en tiempo real (palabra, motivo, contexto)
+- [x] Resaltado del término buscado
+- [x] Contador de resultados
+- [x] Manejo de casos edge (sin sentence, sin context)
+- [x] Diseño responsive
+- [ ] Ordenar por columna (línea, original, chunk_index)
+- [ ] Filtros por tipo de error
+- [ ] Export a CSV/Excel
+- [ ] Acciones de revisión (aceptar/rechazar)
+- [ ] Navegación con teclado
+
+#### Layout (`web/src/layouts/Layout.tsx`)
+- [x] Navegación principal con tabs
+- [x] Menú de usuario (logout)
+- [x] Logo y branding
+- [x] Outlet para rutas hijas
+- [ ] Breadcrumbs
+- [ ] Notificaciones toast
+- [ ] Indicador de estado de conexión
+
+### API Integration (`web/src/lib/api.ts`)
+- [x] Cliente axios base con baseURL
+- [x] Timeout de 20s
+- [x] Función ping para health check
+- [x] Integración con auth interceptor
+- [ ] Retry automático en errores de red
+- [ ] Interceptor de respuestas para errores globales
+- [ ] Request cancellation
+- [ ] Progress tracking para uploads
+
+### Tipos y Modelos (`web/src/lib/types.ts`)
+- [x] CorrectionRow (token_id, original, corrected, reason, context, sentence, line, chunk_index)
+- [ ] Project, Document, Run types completos
+- [ ] Export types
+- [ ] User, AuthTokens (actualmente en auth.ts)
+- [ ] API response types
+
+## Estado Actual: S2 Completado ✅
+
+El MVP básico está funcional con:
+- Autenticación completa
+- CRUD de proyectos
+- Upload de documentos
+- Ejecución y monitoreo de runs
+- **Visualización profesional de correcciones con 3 modos de vista**
+- Búsqueda y descarga de artefactos
+
+**Siguiente paso**: S3 - Filtros avanzados y estadísticas
