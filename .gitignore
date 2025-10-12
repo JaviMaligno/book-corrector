@@ -12,6 +12,8 @@ venv/
 *.txt
 *lock.json
 uv.lock
+.claude/settings.local.json
+tests/run_test.bat
 # Build
 dist/
 build/
