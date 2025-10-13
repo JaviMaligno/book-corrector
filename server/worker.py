@@ -118,7 +118,8 @@ class Worker:
 
         out_base = storage_base() / task.user_id / task.project_id / "runs" / task.run_id
         out_base.mkdir(parents=True, exist_ok=True)
-        stem = input_path.stem
+        # Usar el nombre original del documento (sin el prefijo de checksum) para los outputs
+        stem = Path(doc_name).stem
         # Salidas
         corrected_ext = ".docx" if input_path.suffix.lower() == ".docx" else ".txt"
         corrected_path = out_base / f"{stem}.corrected{corrected_ext}"

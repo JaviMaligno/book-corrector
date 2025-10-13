@@ -7,5 +7,6 @@ export type CorrectionRow = {
   context?: string
   sentence?: string
   chunk_index?: number
+  document?: string  // Nombre del documento de origen
 }
 

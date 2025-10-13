@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import type { CorrectionRow } from '../lib/types'
 
-type Props = { rows: CorrectionRow[] }
+type Props = {
+  rows: CorrectionRow[]
+  showDocumentColumn?: boolean
+}
 
 type ViewMode = 'inline' | 'stacked' | 'side'
 
-export function CorrectionsTable({ rows }: Props) {
+export function CorrectionsTable({ rows, showDocumentColumn = false }: Props) {
   const [query, setQuery] = useState('')
   const [view, setView] = useState<ViewMode>('inline')
 
@@ -58,6 +61,7 @@ export function CorrectionsTable({ rows }: Props) {
           <thead className="text-left text-gray-700 border-b-2 border-gray-300">
             <tr>
               <th className="py-2 pr-2 font-semibold">#</th>
+              {showDocumentColumn && <th className="py-2 pr-2 font-semibold">Documento</th>}
               <th className="py-2 pr-2 font-semibold">Frase Completa</th>
               <th className="py-2 pr-2 font-semibold">Original → Corregido</th>
               <th className="py-2 pr-2 font-semibold">Motivo</th>
@@ -66,7 +70,7 @@ export function CorrectionsTable({ rows }: Props) {
           </thead>
           <tbody>
             {filtered.map((r, i) => (
-              <TableRow key={i} row={r} index={i + 1} view={view} />
+              <TableRow key={i} row={r} index={i + 1} view={view} showDocumentColumn={showDocumentColumn} />
             ))}
           </tbody>
         </table>
@@ -79,12 +83,19 @@ type RowProps = {
   row: CorrectionRow
   index: number
   view: ViewMode
+  showDocumentColumn: boolean
 }
 
-function TableRow({ row, index, view }: RowProps) {
+function TableRow({ row, index, view, showDocumentColumn }: RowProps) {
   return (
     <tr className="border-b last:border-0 align-top hover:bg-gray-50">
       <td className="py-3 pr-2 text-gray-500 text-center">{index}</td>
+
+      {showDocumentColumn && (
+        <td className="py-3 pr-2 text-gray-700 font-medium max-w-[200px] truncate" title={row.document}>
+          {row.document}
+        </td>
+      )}
 
       <td className="py-3 pr-2 max-w-[600px]">
         {view === 'inline' && <InlineView row={row} />}
