@@ -11,14 +11,14 @@ services:
     volumes:
       - api_data:/data
     ports:
-      - "8000:8000"
+      - "8001:8000"
 
   web:
     build:
       context: .
       dockerfile: web/Dockerfile.prod
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8001
     ports:
       - "8080:80"
     depends_on:

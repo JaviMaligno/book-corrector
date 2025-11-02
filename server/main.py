@@ -29,7 +29,8 @@ from .routes_auth import router as auth_router
 from .routes_projects import router as projects_router
 from .routes_runs import router as runs_router
 from .routes_documents import router as documents_router
-from .models import RunDocument, Run, User, RunDocumentStatus
+from .routes_suggestions import router as suggestions_router
+from .models import RunDocument, Run, User, RunDocumentStatus, Suggestion
 from .scheduler_registry import get_scheduler
 from .scheduler import RunJob, User as SUser
 
@@ -101,6 +102,7 @@ def create_app() -> "FastAPI":  # type: ignore
     app.include_router(projects_router)
     app.include_router(runs_router)
     app.include_router(documents_router)
+    app.include_router(suggestions_router)
 
     # Startup background worker and rebuild scheduler from DB (persistent queue)
     try:
@@ -131,6 +133,13 @@ def create_app() -> "FastAPI":  # type: ignore
                         print("✅ Demo user already exists")
             except Exception as e:
                 print(f"⚠️  Error ensuring demo user: {e}")
+
+            # Setup demo data with sample corrections
+            try:
+                from .demo_data import setup_demo_data
+                setup_demo_data()
+            except Exception as e:
+                print(f"⚠️  Error setting up demo data: {e}")
 
             # Rebuild the in-memory scheduler from queued tasks in DB
             try:

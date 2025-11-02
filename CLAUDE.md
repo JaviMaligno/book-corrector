@@ -8,7 +8,7 @@ Spanish text corrector using Google Gemini API. Detects orthographic errors and 
 
 **Two modes:**
 - **CLI**: Command-line tool for local document correction
-- **Server**: FastAPI REST API with user auth, projects, and job scheduling
+- **Server**: FastAPI REST API with user auth, projects, job scheduling, and **correction acceptance/rejection**
 
 ## Commands
 
@@ -365,3 +365,190 @@ Token ID misalignment from Gemini. Filter at `engine.py` line 99 should catch th
 
 ### "Docker container exits immediately"
 Check logs: `docker-compose logs corrector-api`. Likely missing `GOOGLE_API_KEY` in `.env`.
+
+## Correction Acceptance/Rejection Feature (NEW)
+
+The server now supports **full correction management**, allowing users to review, accept, or reject corrections before applying them to the final document.
+
+### Overview
+
+When a correction run completes, all suggestions are saved to the database with `status=pending`. Users can then:
+- Review suggestions individually or by type
+- Accept/reject corrections one by one or in bulk
+- Export a final document with **only accepted corrections** applied
+
+### Database Model
+
+**`Suggestion` table:**
+```python
+- id: UUID
+- run_id: FK to Run
+- document_id: FK to Document
+- token_id: int (stable token position)
+- line: int (paragraph/line number)
+- suggestion_type: ortografia | puntuacion | concordancia | estilo | lexico | otro
+- severity: error | warning | info
+- before: original text
+- after: suggested replacement
+- reason: explanation
+- source: rule | llm
+- confidence: float (0.0-1.0 for AI)
+- context: surrounding text
+- sentence: full sentence
+- status: pending | accepted | rejected ← KEY FIELD
+- created_at: timestamp
+```
+
+### API Endpoints
+
+All endpoints under `/suggestions` prefix:
+
+**List suggestions:**
+```bash
+GET /suggestions/runs/{run_id}/suggestions?status=pending
+Authorization: Bearer {token}
+```
+
+**Accept/reject individual:**
+```bash
+PATCH /suggestions/suggestions/{suggestion_id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{"status": "accepted"}  # or "rejected"
+```
+
+**Bulk operations:**
+```bash
+# Bulk update
+POST /suggestions/runs/{run_id}/suggestions/bulk-update
+{"suggestion_ids": ["id1", "id2"], "status": "accepted"}
+
+# Accept all pending
+POST /suggestions/runs/{run_id}/suggestions/accept-all
+
+# Reject all pending
+POST /suggestions/runs/{run_id}/suggestions/reject-all
+```
+
+**Export with accepted corrections:**
+```bash
+POST /suggestions/runs/{run_id}/export-with-accepted
+Authorization: Bearer {token}
+# Returns DOCX file with only accepted corrections applied
+```
+
+### Worker Behavior
+
+**`server/worker.py` changes:**
+1. Uses `process_paragraphs()` instead of `process_document()` to get `LogEntry` objects
+2. Persists each correction as a `Suggestion` record with `status=pending`
+3. Auto-classifies suggestion type based on reason keywords
+4. Maintains backward compatibility (still generates JSONL/CSV/DOCX logs)
+
+**Classification logic:**
+```python
+# Keywords in reason → suggestion_type
+"ortografía" → ortografia
+"puntuación" → puntuacion
+"léxico", "confusión" → lexico
+"concordancia" → concordancia
+"estilo" → estilo
+```
+
+### Example Workflows
+
+**Example 1: Editorial Review**
+```python
+import requests
+
+token = login("demo@example.com", "demo123")
+run_id = "abc-123"
+
+# 1. List all suggestions
+suggs = requests.get(f"{API}/suggestions/runs/{run_id}/suggestions",
+                     headers={"Authorization": f"Bearer {token}"}).json()
+
+# 2. Auto-accept orthography
+ortho_ids = [s["id"] for s in suggs["suggestions"] if s["suggestion_type"] == "ortografia"]
+requests.post(f"{API}/suggestions/runs/{run_id}/suggestions/bulk-update",
+              headers={"Authorization": f"Bearer {token}"},
+              json={"suggestion_ids": ortho_ids, "status": "accepted"})
+
+# 3. Review style manually
+style = [s for s in suggs["suggestions"] if s["suggestion_type"] == "estilo"]
+for s in style:
+    print(f"{s['before']} → {s['after']}: {s['reason']}")
+    # Decision logic here...
+
+# 4. Export final document
+response = requests.post(f"{API}/suggestions/runs/{run_id}/export-with-accepted",
+                        headers={"Authorization": f"Bearer {token}"})
+with open("final.docx", "wb") as f:
+    f.write(response.content)
+```
+
+**Example 2: Quick Accept All**
+```bash
+# Accept all suggestions at once
+curl -X POST "http://localhost:8000/suggestions/runs/{run_id}/suggestions/accept-all" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Export
+curl -X POST "http://localhost:8000/suggestions/runs/{run_id}/export-with-accepted" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o final_accepted.docx
+```
+
+### Files Changed
+
+- **`server/models.py`**: Added `Suggestion` model with enums
+- **`server/schemas.py`**: Added API request/response schemas
+- **`server/routes_suggestions.py`**: New router with all suggestion endpoints
+- **`server/worker.py`**: Updated to persist suggestions and use `process_paragraphs()`
+- **`server/main.py`**: Registered suggestions router
+- **`docs/feature-correction-acceptance.md`**: Complete feature documentation
+- **`docs/plan-backend.md`**: Updated with new model and endpoints
+- **`examples/example_correction_workflow.py`**: Python example script
+- **`examples/example_curl_commands.sh`**: Bash/curl example script
+
+### Testing
+
+**Quick test:**
+```bash
+# 1. Verify models load
+uv run python -c "from server.models import Suggestion; print('OK')"
+
+# 2. Start server
+docker-compose up
+
+# 3. Create a run (generates suggestions)
+curl -X POST http://localhost:8000/runs \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"project_id":"...","documents":["..."]}'
+
+# 4. List suggestions
+curl http://localhost:8000/suggestions/runs/{run_id}/suggestions \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**See full examples:**
+- Python: `examples/example_correction_workflow.py`
+- Bash: `examples/example_curl_commands.sh`
+
+### Benefits
+
+✅ **Full control**: Users decide which corrections to apply
+✅ **Batch operations**: Efficient bulk accept/reject
+✅ **Type filtering**: Accept all orthography, review style manually
+✅ **Audit trail**: All decisions tracked in database
+✅ **Format preservation**: Final document maintains original formatting
+✅ **Backward compatible**: Existing JSONL/CSV/DOCX logs still generated
+
+### Future Extensions
+
+- **Learn from patterns**: Auto-accept/reject based on user history
+- **Custom rules**: "Always accept type X, always reject type Y"
+- **Comments**: Allow users to add notes to suggestions
+- **Visual diff**: UI for side-by-side comparison
+- **Track changes export**: Generate DOCX with Word track changes markup

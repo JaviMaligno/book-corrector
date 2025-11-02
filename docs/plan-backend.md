@@ -93,7 +93,7 @@ Configurables por defecto (MVP)
 - `projects` (id, owner_id, name, lang_variant, style_profile_id, config_json, created_at)
 - `documents` (id, project_id, path, kind: docx|txt|md, checksum, status)
 - `runs` (id, project_id, submitted_by, mode: rapido|profesional, status, params_json, started_at, finished_at)
-- `suggestions` (id, run_id, document_id, location, type, severity, before, after, reason, citation_id, source: rule|llm, confidence)
+- `suggestions` (id, run_id, document_id, token_id, line, location, type, severity, before, after, reason, citation_id, source: rule|llm, confidence, context, sentence, **status: pending|accepted|rejected**, created_at)
 - `exports` (id, run_id, kind: docx|csv|jsonl|md, path)
 - `style_profiles` (id, project_id, derived_from_run_id|null, data_json, era, region, treatment, quotes_style, numeric_style, leismo, solo_tilde, persona_rules)
 - `characters` (id, project_id, name, traits_json)
@@ -145,6 +145,15 @@ Fallback sin coste
 - `POST /projects/{id}/runs` (params: modo, paquetes de reglas, uso IA), `GET /runs/{id}` (status), `GET /runs/{id}/suggestions`, `GET /runs/{id}/exports/{kind}`
 - `POST /projects/{id}/style/auto-infer` (premium), `GET/PATCH /projects/{id}/style`
 - `GET /me/limits` (cuotas y consumo), `GET /me/exports`, `GET /health`
+
+**Gestión de Correcciones (nuevo)**:
+- `GET /suggestions/runs/{run_id}/suggestions` (listar todas las sugerencias, filtrable por status)
+- `GET /suggestions/suggestions/{suggestion_id}` (obtener una sugerencia)
+- `PATCH /suggestions/suggestions/{suggestion_id}` (aceptar/rechazar individualmente)
+- `POST /suggestions/runs/{run_id}/suggestions/bulk-update` (aceptar/rechazar múltiples)
+- `POST /suggestions/runs/{run_id}/suggestions/accept-all` (aceptar todas las pendientes)
+- `POST /suggestions/runs/{run_id}/suggestions/reject-all` (rechazar todas las pendientes)
+- `POST /suggestions/runs/{run_id}/export-with-accepted` (generar documento final solo con correcciones aceptadas)
 
 Estados de run
 - `queued` → `processing` → `exporting` → `completed` | `failed` | `canceled`.

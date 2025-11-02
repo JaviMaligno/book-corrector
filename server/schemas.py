@@ -33,3 +33,41 @@ class RunStatusResponse(BaseModel):
     processed_documents: int = 0
     total_documents: int = 0
 
+
+class SuggestionResponse(BaseModel):
+    id: str
+    run_id: str
+    document_id: str
+    token_id: int
+    line: int
+    suggestion_type: str
+    severity: str
+    before: str
+    after: str
+    reason: str
+    source: str
+    confidence: Optional[float] = None
+    context: Optional[str] = None
+    sentence: Optional[str] = None
+    status: str
+
+
+class SuggestionsListResponse(BaseModel):
+    run_id: str
+    total: int
+    suggestions: List[SuggestionResponse]
+
+
+class UpdateSuggestionStatusRequest(BaseModel):
+    status: str = Field(pattern="^(accepted|rejected)$")
+
+
+class BulkUpdateSuggestionsRequest(BaseModel):
+    suggestion_ids: List[str]
+    status: str = Field(pattern="^(accepted|rejected)$")
+
+
+class ExportWithCorrectionsRequest(BaseModel):
+    run_id: str
+    only_accepted: bool = True  # If True, only apply accepted corrections
+

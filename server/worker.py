@@ -24,8 +24,9 @@ from .scheduler import DocumentTask
 from .scheduler_registry import get_scheduler
 from .storage import storage_base
 
-from corrector.engine import process_document
+from corrector.engine import process_document, process_paragraphs, LogEntry
 from corrector.model import HeuristicCorrector
+from corrector.docx_utils import read_paragraphs, write_docx_preserving_runs, write_paragraphs
 
 logger = logging.getLogger(__name__)
 
@@ -147,15 +148,27 @@ class Worker:
             logger.info("   Input: %s", input_path)
             logger.info("   Output: %s", corrected_path)
 
-            process_document(
-                input_path=str(input_path),
-                output_path=str(corrected_path),
-                log_path=str(log_jsonl_path),
-                corrector=corrector,
-                preserve_format=True,
-                log_docx_path=str(log_docx_path),
-                enable_docx_log=True,
+            # Process using process_paragraphs to get LogEntry objects
+            paragraphs = read_paragraphs(str(input_path))
+            corrected_paragraphs, log_entries = process_paragraphs(
+                paragraphs, corrector, chunk_words=0, overlap_words=0
             )
+
+            # Save corrected document
+            if input_path.suffix.lower() == '.docx':
+                write_docx_preserving_runs(str(input_path), corrected_paragraphs, str(corrected_path))
+            else:
+                write_paragraphs(corrected_paragraphs, str(corrected_path))
+
+            # Persist suggestions to database
+            logger.info("💾 Saving %d suggestions to database...", len(log_entries))
+            self._persist_suggestions(task, log_entries)
+
+            # Write JSONL log for compatibility
+            self._write_log_jsonl(log_jsonl_path, log_entries)
+
+            # Write DOCX log
+            self._write_log_docx(log_docx_path, log_entries, source_filename=doc_name)
 
             logger.info("✅ Document processing completed: %s", doc_name)
             logger.info("📊 Building CSV changelog...")
@@ -294,6 +307,82 @@ class Worker:
                         writer.writerow(row)
             except FileNotFoundError:
                 pass
+
+    def _persist_suggestions(self, task: DocumentTask, log_entries: list[LogEntry]) -> None:
+        """Persist log entries as Suggestion records in database."""
+        from .db import session_scope
+        from .models import Suggestion, SuggestionType, SuggestionSeverity, SuggestionSource
+
+        with session_scope() as session:
+            for entry in log_entries:
+                # Classify suggestion type based on reason keywords
+                reason_lower = entry.reason.lower()
+                suggestion_type = SuggestionType.otro
+                if any(kw in reason_lower for kw in ["ortografía", "ortografia", "spelling"]):
+                    suggestion_type = SuggestionType.ortografia
+                elif any(kw in reason_lower for kw in ["puntuación", "puntuacion", "punctuation"]):
+                    suggestion_type = SuggestionType.puntuacion
+                elif any(kw in reason_lower for kw in ["concordancia", "agreement"]):
+                    suggestion_type = SuggestionType.concordancia
+                elif any(kw in reason_lower for kw in ["estilo", "style"]):
+                    suggestion_type = SuggestionType.estilo
+                elif any(kw in reason_lower for kw in ["léxico", "lexico", "lexical", "confusión", "confusion"]):
+                    suggestion_type = SuggestionType.lexico
+
+                # Default severity
+                severity = SuggestionSeverity.info
+                if "[ELIMINACIÓN]" in entry.reason:
+                    severity = SuggestionSeverity.warning
+
+                # Determine source (rule vs llm)
+                source = SuggestionSource.llm if task.use_ai else SuggestionSource.rule
+
+                suggestion = Suggestion(
+                    run_id=task.run_id,
+                    document_id=task.document_id,
+                    token_id=entry.token_id,
+                    line=entry.line,
+                    suggestion_type=suggestion_type,
+                    severity=severity,
+                    before=entry.original,
+                    after=entry.corrected,
+                    reason=entry.reason,
+                    source=source,
+                    context=entry.context,
+                    sentence=entry.sentence,
+                )
+                session.add(suggestion)
+            session.commit()
+
+    def _write_log_jsonl(self, path: Path, entries: list[LogEntry]) -> None:
+        """Write log entries to JSONL file."""
+        import json
+
+        with path.open("w", encoding="utf-8") as f:
+            for e in entries:
+                f.write(
+                    json.dumps(
+                        {
+                            "token_id": e.token_id,
+                            "line": e.line,
+                            "original": e.original,
+                            "corrected": e.corrected,
+                            "reason": e.reason,
+                            "context": e.context,
+                            "chunk_index": e.chunk_index,
+                            "sentence": e.sentence,
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+
+    def _write_log_docx(self, path: Path, entries: list[LogEntry], source_filename: str | None = None) -> None:
+        """Write log entries to formatted DOCX file."""
+        # Import the existing function from engine
+        from corrector.engine import _write_log_docx as engine_write_log_docx
+
+        engine_write_log_docx(str(path), entries, source_filename=source_filename)
 
     def _build_summary_md(self, summary_path: Path, *, docname: str, jsonl_path: Path) -> None:
         import json
