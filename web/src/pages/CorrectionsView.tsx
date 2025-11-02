@@ -93,6 +93,11 @@ export default function CorrectionsView() {
     onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
   })
 
+  const revertMutation = useMutation({
+    mutationFn: (id: string) => updateSuggestionStatus(id, 'pending'),
+    onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
+  })
+
   const bulkAcceptMutation = useMutation({
     mutationFn: (ids: string[]) => bulkUpdateSuggestions(runId, ids, 'accepted'),
     onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
@@ -298,6 +303,7 @@ export default function CorrectionsView() {
         mode={mode}
         onAccept={mode === 'server' ? (id) => acceptMutation.mutate(id) : undefined}
         onReject={mode === 'server' ? (id) => rejectMutation.mutate(id) : undefined}
+        onRevert={mode === 'server' ? (id) => revertMutation.mutate(id) : undefined}
         onBulkAccept={mode === 'server' ? (ids) => bulkAcceptMutation.mutate(ids) : undefined}
         onBulkReject={mode === 'server' ? (ids) => bulkRejectMutation.mutate(ids) : undefined}
         onAcceptAll={mode === 'server' ? () => acceptAllMutation.mutate() : undefined}

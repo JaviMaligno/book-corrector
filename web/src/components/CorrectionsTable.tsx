@@ -7,6 +7,7 @@ type Props = {
   mode?: 'legacy' | 'server'
   onAccept?: (id: string) => void
   onReject?: (id: string) => void
+  onRevert?: (id: string) => void
   onBulkAccept?: (ids: string[]) => void
   onBulkReject?: (ids: string[]) => void
   onAcceptAll?: () => void
@@ -26,6 +27,7 @@ export function CorrectionsTable({
   mode = 'legacy',
   onAccept,
   onReject,
+  onRevert,
   onBulkAccept,
   onBulkReject,
   onAcceptAll,
@@ -273,6 +275,7 @@ export function CorrectionsTable({
                 onToggleSelect={isSuggestion(r) ? () => toggleOne(r.id) : undefined}
                 onAccept={isSuggestion(r) && onAccept ? () => onAccept(r.id) : undefined}
                 onReject={isSuggestion(r) && onReject ? () => onReject(r.id) : undefined}
+                onRevert={isSuggestion(r) && onRevert ? () => onRevert(r.id) : undefined}
               />
             ))}
           </tbody>
@@ -314,9 +317,10 @@ type RowProps = {
   onToggleSelect?: () => void
   onAccept?: () => void
   onReject?: () => void
+  onRevert?: () => void
 }
 
-function TableRow({ row, index, view, showDocumentColumn, mode = 'legacy', selected, onToggleSelect, onAccept, onReject }: RowProps) {
+function TableRow({ row, index, view, showDocumentColumn, mode = 'legacy', selected, onToggleSelect, onAccept, onReject, onRevert }: RowProps) {
   const suggestion = isSuggestion(row) ? row : null
   const original = suggestion ? suggestion.before : row.original
   const corrected = suggestion ? suggestion.after : row.corrected
@@ -401,14 +405,32 @@ function TableRow({ row, index, view, showDocumentColumn, mode = 'legacy', selec
             </div>
           )}
           {isAccepted && (
-            <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
-              ✓ Aceptada
-            </span>
+            <div className="flex gap-1 items-center">
+              <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                ✓ Aceptada
+              </span>
+              <button
+                onClick={onRevert}
+                className="px-2 py-1 bg-gray-500 text-white rounded text-xs font-medium hover:bg-gray-600 transition-colors"
+                title="Revertir a pendiente"
+              >
+                ↶
+              </button>
+            </div>
           )}
           {isRejected && (
-            <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700">
-              ✗ Rechazada
-            </span>
+            <div className="flex gap-1 items-center">
+              <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700">
+                ✗ Rechazada
+              </span>
+              <button
+                onClick={onRevert}
+                className="px-2 py-1 bg-gray-500 text-white rounded text-xs font-medium hover:bg-gray-600 transition-colors"
+                title="Revertir a pendiente"
+              >
+                ↶
+              </button>
+            </div>
           )}
         </td>
       )}

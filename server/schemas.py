@@ -59,7 +59,7 @@ class SuggestionsListResponse(BaseModel):
 
 
 class UpdateSuggestionStatusRequest(BaseModel):
-    status: str = Field(pattern="^(accepted|rejected)$")
+    status: str = Field(pattern="^(pending|accepted|rejected)$")
 
 
 class BulkUpdateSuggestionsRequest(BaseModel):
