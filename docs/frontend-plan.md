@@ -55,22 +55,42 @@ Este plan concreta una SPA ligera para operar “por proyecto”, alineada con d
 - [x] Integración con API autenticada (axios interceptors)
 - [x] Descarga de artefactos (DOCX corregidos, logs JSONL, reportes)
 
-### 🚧 En Progreso (S3)
-- [ ] Filtros avanzados (por tipo de error, línea, chunk)
-- [ ] Segmentación y navegación por categorías de corrección
-- [ ] Estadísticas y métricas del run (total errores, tipos más comunes)
+### ✅ Completado (S3)
+- [x] **UI de Revisión interactiva integrada en CorrectionsView**:
+  - [x] Detección automática modo servidor (API) vs legacy (JSONL)
+  - [x] Aceptar/Rechazar individual con botones inline en cada fila
+  - [x] Checkboxes de selección múltiple
+  - [x] Operaciones en bulk: "Aceptar seleccionadas (N)" y "Rechazar seleccionadas (N)"
+  - [x] "Aceptar todas pendientes" y "Rechazar todas pendientes" con confirmaciones
+  - [x] Barra de progreso visual (verde/amarillo/rojo) con % completado
+  - [x] Filtros por status (Todas, Pendientes, Aceptadas, Rechazadas)
+  - [x] Badges de estado y tipo de corrección en cada fila
+  - [x] Exportación DOCX con solo correcciones aceptadas
+  - [x] Mutaciones con TanStack Query e invalidación automática
+  - [x] Retrocompatibilidad con runs legacy (JSONL)
+- [x] **API Integration** (`web/src/lib/suggestions.ts`):
+  - [x] `listSuggestions(runId, status?)` - GET con filtro opcional
+  - [x] `updateSuggestionStatus(id, status)` - PATCH individual
+  - [x] `bulkUpdateSuggestions(runId, ids, status)` - POST bulk
+  - [x] `acceptAllSuggestions(runId)` - POST accept-all
+  - [x] `rejectAllSuggestions(runId)` - POST reject-all
+  - [x] `exportWithAccepted(runId)` - POST export DOCX
+- [x] Estadísticas y métricas del run (contadores pendientes/aceptadas/rechazadas)
 
-### 📋 Pendiente (S3.5-S5)
-- [ ] UI de Revisión interactiva:
-  - [ ] Aceptar/Rechazar individual
-  - [ ] Panel lateral con contexto expandido
-  - [ ] Operaciones en bulk
-  - [ ] "Aceptar por defecto" con excepciones
-- [ ] Backend de decisiones:
-  - [ ] Persistencia de review_sessions y review_decisions
-  - [ ] Preview del documento final
-  - [ ] Finalize y aplicación de cambios
-  - [ ] Export de dataset (SFT/preferencias)
+### 🚧 En Progreso (S3.5)
+- [ ] Filtros avanzados por tipo de error, severidad y confianza
+- [ ] Segmentación y navegación por categorías de corrección
+- [ ] Virtualización de listas para >10k sugerencias
+
+### 📋 Pendiente (S4-S5)
+- [ ] UI de Revisión avanzada:
+  - [ ] Panel lateral con contexto expandido y metadata adicional
+  - [ ] Vista de comparación antes/después con scroll sincronizado
+  - [ ] Atajos de teclado (A/R/U, ↑/↓)
+- [ ] Backend de decisiones extendido:
+  - [ ] Persistencia de review_sessions (opcional, actualmente inline)
+  - [ ] Preview del documento final (dry-run)
+  - [ ] Export de dataset de feedback (SFT/preferencias)
 - [ ] Modo Rápido vs Profesional:
   - [ ] Glosario personalizado
   - [ ] Paquetes de reglas

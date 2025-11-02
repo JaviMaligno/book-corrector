@@ -334,8 +334,19 @@ pytest tests/test_text_utils.py tests/test_engine_apply.py
 ## 📌 Progreso
 
 - Checklists vivos del proyecto (se actualizan con cada cambio):
-  - Backend: progress/backend-checklist.md
-  - Core: progress/core-checklist.md
+  - Backend: `progress/backend-checklist.md`
+  - Core: `progress/core-checklist.md`
+  - Frontend: `progress/frontend-checklist.md`
+
+### Última actualización (S3)
+- ✅ **UI de revisión interactiva con aceptación/rechazo en tabla**: Sistema completo de gestión de sugerencias integrado en `CorrectionsView` con:
+  - Detección automática de modo servidor (API persistente) vs legacy (JSONL)
+  - Botones inline para aceptar/rechazar correcciones individuales
+  - Selección múltiple con checkboxes y acciones masivas
+  - Barra de progreso visual con segmentos de estado (pendientes/aceptadas/rechazadas)
+  - Filtros por status con tabs dinámicos
+  - Exportación DOCX con solo correcciones aceptadas
+  - Retrocompatibilidad completa con runs antiguos
 
 
 # Tests con mock de Gemini

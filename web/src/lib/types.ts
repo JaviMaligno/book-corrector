@@ -10,3 +10,28 @@ export type CorrectionRow = {
   document?: string  // Nombre del documento de origen
 }
 
+// Backend suggestion model (persistent)
+export type Suggestion = {
+  id: string                    // UUID de la sugerencia
+  run_id: string
+  document_id: string
+  token_id: number
+  line: number
+  suggestion_type: string       // ortografia, puntuacion, estilo, etc.
+  severity: string              // error, warning, info
+  before: string                // texto original
+  after: string                 // texto sugerido
+  reason: string
+  source: string                // rule | llm
+  confidence: number | null     // 0.0-1.0
+  context: string | null
+  sentence: string | null       // frase completa
+  status: 'pending' | 'accepted' | 'rejected'
+}
+
+export type SuggestionsListResponse = {
+  run_id: string
+  total: number
+  suggestions: Suggestion[]
+}
+

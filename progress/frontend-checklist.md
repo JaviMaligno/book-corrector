@@ -18,17 +18,22 @@
 - [ ] SSE/WebSocket para progreso en tiempo real.
 - [ ] Visor DOCX (track changes) embebido o descarga mejorada.
 - [ ] CI/CD y previsualizaciones (PRs) del frontend.
-## Revisión interactiva (nuevo)
-- [ ] Ruta `/runs/:runId/review` y modo revisión desde visor.
-- [ ] Panel lateral con motivo y acciones Aceptar/Rechazar por corrección.
-- [ ] Toggle “Aceptar por defecto” + acciones masivas Aceptar/Rechazar restantes.
-- [ ] Estado de revisión en cliente (`ReviewProvider`) con contadores.
-- [ ] Previsualización local del documento aplicado (sin backend) cuando se cargue JSONL.
-- [ ] Integrar endpoints backend para decisiones (`POST /runs/{id}/reviews`, bulk y preview/finalize).
-- [ ] Exportar dataset de feedback desde UI (descarga `reviews.jsonl`).
+## Revisión interactiva (implementado S3)
+- [x] Detección automática modo servidor/legacy en `CorrectionsView`.
+- [x] Integración con endpoints backend `/suggestions/*` (list, patch, bulk, accept-all, reject-all, export).
+- [x] Tipos TypeScript (`Suggestion`, `SuggestionsListResponse`) y funciones API en `suggestions.ts`.
+- [x] Columna de acciones inline con botones Aceptar/Rechazar individuales.
+- [x] Checkboxes de selección múltiple y barra de acciones masivas.
+- [x] Botones "Aceptar seleccionadas (N)" y "Rechazar seleccionadas (N)" con bulk update.
+- [x] Botones "Aceptar todas pendientes" y "Rechazar todas pendientes" con confirmaciones modales.
+- [x] Barra de progreso visual con segmentos (aceptadas/pendientes/rechazadas) y porcentaje completado.
+- [x] Filtros por status (Todas, Pendientes, Aceptadas, Rechazadas) con tabs y contadores dinámicos.
+- [x] Badges de estado (Aceptada verde, Rechazada roja) y tipo de corrección (ortografía, puntuación, estilo).
+- [x] Botón de exportación DOCX con solo correcciones aceptadas (descarga desde backend).
+- [x] Mutaciones con TanStack Query e invalidación automática para refetch.
+- [x] Retrocompatibilidad completa con modo legacy (JSONL) para runs antiguos.
 - [ ] Lista de correcciones virtualizada (rendimiento >10k entradas).
 - [ ] Scroll sincronizado en vista comparada Original↔Corregido.
 - [ ] Atajos de teclado (A/R/U, navegación ↑/↓).
-- [ ] Perfiles de auto‑aplicación (Seguro vs Revisar) y UI de filtro.
-- [ ] Simulación “dry run” de lotes antes de aplicar.
+- [ ] Perfiles de auto‑aplicación (Seguro vs Revisar) y UI de filtro por severidad.
 - [ ] Undo/redo por lote y reinicio de sesión de revisión.

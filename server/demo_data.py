@@ -9,7 +9,8 @@ from sqlmodel import Session, select
 from .db import engine
 from .models import (
     User, Project, Document, DocumentKind, Run, RunDocument,
-    RunDocumentStatus, RunMode, RunStatus, Export, ExportKind
+    RunDocumentStatus, RunMode, RunStatus, Export, ExportKind,
+    Suggestion, SuggestionType, SuggestionSeverity, SuggestionSource, SuggestionStatus
 )
 
 
@@ -274,8 +275,49 @@ def setup_demo_data():
         )
         session.add(export_md)
 
+        # Persist suggestions to database
+        print(f"💾 Creating {len(SAMPLE_CORRECTIONS)} suggestions in database...")
+        for correction in SAMPLE_CORRECTIONS:
+            # Classify suggestion type based on reason
+            reason_lower = correction["reason"].lower()
+            suggestion_type = SuggestionType.otro
+            
+            if any(kw in reason_lower for kw in ["ortografía", "ortografia", "spelling"]):
+                suggestion_type = SuggestionType.ortografia
+            elif any(kw in reason_lower for kw in ["puntuación", "puntuacion", "punctuation"]):
+                suggestion_type = SuggestionType.puntuacion
+            elif any(kw in reason_lower for kw in ["concordancia", "agreement"]):
+                suggestion_type = SuggestionType.concordancia
+            elif any(kw in reason_lower for kw in ["estilo", "style"]):
+                suggestion_type = SuggestionType.estilo
+            elif any(kw in reason_lower for kw in ["léxico", "lexico", "lexical", "confusión", "confusion"]):
+                suggestion_type = SuggestionType.lexico
+            
+            severity = SuggestionSeverity.info
+            if "error" in reason_lower:
+                severity = SuggestionSeverity.error
+            elif "[ELIMINACIÓN]" in correction["reason"]:
+                severity = SuggestionSeverity.warning
+            
+            suggestion = Suggestion(
+                run_id=demo_run.id,
+                document_id=demo_doc.id,
+                token_id=correction["token_id"],
+                line=correction["line"],
+                suggestion_type=suggestion_type,
+                severity=severity,
+                before=correction["original"],
+                after=correction["corrected"],
+                reason=correction["reason"],
+                source=SuggestionSource.llm,  # Demo uses AI
+                context=correction["context"],
+                sentence=None,  # Will be populated by newer runs
+                status=SuggestionStatus.pending,  # All demo suggestions start as pending
+            )
+            session.add(suggestion)
+
         session.commit()
-        print("✅ Demo data setup completed successfully")
+        print("✅ Demo data setup completed successfully with suggestions")
 
 
 if __name__ == "__main__":

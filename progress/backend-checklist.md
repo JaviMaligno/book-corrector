@@ -31,16 +31,21 @@ Estado de alto nivel del backend (API, datos, colas, límites, despliegue). Mant
 - [x] Generar y guardar exportables (JSONL/DOCX) por `RunDocument` (tabla `exports`)
 - [x] CSV del log y carta editorial (`summary.md`) como exportables vinculados al `Run`
  
-## Revisión interactiva y feedback (nuevo)
-- [ ] Modelo de datos de revisión: `review_sessions` y `review_decisions` (token_id/suggestion_id, accepted|rejected|unset)
-- [ ] `GET /runs/{id}/suggestions` (o exponer directo `*.corrections.jsonl` con metadata estable)
-- [ ] `POST /runs/{id}/reviews` (guardar decisiones), `POST /runs/{id}/reviews/bulk`
+## Revisión interactiva y feedback (implementado)
+- [x] Modelo `Suggestion` con status (pending/accepted/rejected), tipo, severidad, source
+- [x] `GET /suggestions/runs/{run_id}/suggestions` con filtrado por status
+- [x] `PATCH /suggestions/suggestions/{id}` para aceptar/rechazar individual
+- [x] `POST /suggestions/runs/{run_id}/suggestions/bulk-update` para aceptar/rechazar múltiples por IDs
+- [x] `POST /suggestions/runs/{run_id}/suggestions/accept-all` y `reject-all` para pendientes
+- [x] `POST /suggestions/runs/{run_id}/export-with-accepted` exportar DOCX con solo aceptadas
+- [x] Persistencia en worker: _persist_suggestions() crea registros Suggestion al procesar
+- [x] demo_data.py crea 15 Suggestion registros de ejemplo con tipos léxico/ortográfico
 - [ ] `GET /runs/{id}/preview` (aplicar decisiones sobre texto) y `POST /runs/{id}/finalize` (export final)
 - [ ] `GET /runs/{id}/reviews/export` (dataset JSONL/CSV para entrenamiento)
-- [ ] Agregador “apply decisions” estable por `token_id` y orden de aparición
+- [ ] Agregador "apply decisions" estable por `token_id` y orden de aparición
 - [ ] `suggestion_id` estable (hash doc_id|token_id|original|corrected|rule_id) y validación de idempotencia
 - [ ] Filtros de bulk por `category`, `rule_id`, `doc_id`, `confidence_min`, `state=pending`
-- [ ] Endpoint de previsualización “dry run” con streaming (HTML/TXT) y fallback DOCX temporal
+- [ ] Endpoint de previsualización "dry run" con streaming (HTML/TXT) y fallback DOCX temporal
 - [ ] Auditoría/Historial de decisiones por sesión (quién, cuándo, lote)
 - [ ] Export de dataset con anonimización y schema SFT/preferencias
 
