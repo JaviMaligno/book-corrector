@@ -215,11 +215,11 @@ def export_document_with_accepted_corrections(
 ):
     """Generate final document with only accepted corrections applied."""
     from pathlib import Path
-    from fastapi.responses import FileResponse
-    from corrector.text_utils import Token, apply_token_corrections, tokenize, detokenize
+    from fastapi.responses import Response
+    from corrector.text_utils import Token, Correction, apply_token_corrections, tokenize, detokenize
     from corrector.docx_utils import read_paragraphs, write_docx_preserving_runs
-    from ..storage import storage_base
-    from ..models import Document, RunDocument
+    from server.storage import storage_base
+    from server.models import Document, RunDocument
 
     # Verify run exists and user owns it
     run = session.get(Run, run_id)
@@ -261,15 +261,11 @@ def export_document_with_accepted_corrections(
     corrections = []
     for sugg in accepted:
         corrections.append(
-            type(
-                "Corr",
-                (),
-                {
-                    "token_id": sugg.token_id,
-                    "replacement": sugg.after,
-                    "reason": sugg.reason,
-                    "original": sugg.before,
-                },
+            Correction(
+                token_id=sugg.token_id,
+                replacement=sugg.after,
+                reason=sugg.reason,
+                original=sugg.before,
             )
         )
 
@@ -285,15 +281,19 @@ def export_document_with_accepted_corrections(
     stem = Path(doc.name).stem
     output_path = out_base / f"{stem}.accepted.docx"
 
-    # Save with format preservation
-    if input_path.suffix.lower() == ".docx":
-        write_docx_preserving_runs(str(input_path), corrected_paragraphs, str(output_path))
-    else:
-        from corrector.docx_utils import write_paragraphs
-        write_paragraphs(corrected_paragraphs, str(output_path))
+    # Save corrected document (create new document for clarity)
+    from corrector.docx_utils import write_paragraphs
+    write_paragraphs(corrected_paragraphs, str(output_path))
 
-    return FileResponse(
-        str(output_path),
-        filename=f"{stem}.accepted.docx",
+    # Read the file and return as Response (better CORS support than FileResponse)
+    with open(output_path, "rb") as f:
+        content = f.read()
+    
+    return Response(
+        content=content,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={
+            "Content-Disposition": f'attachment; filename="{stem}.accepted.docx"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
     )

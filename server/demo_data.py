@@ -189,16 +189,44 @@ def setup_demo_data():
         session.refresh(demo_project)
         print(f"✅ Created demo project: {demo_project.id}")
 
-        # Create demo document
+        # Create demo document with original text
+        from corrector.docx_utils import write_paragraphs
+        
+        # Create document with original (incorrect) text
+        original_text = [
+            "La baca mugía en el prado.",
+            "espero que halla terminado el trabajo.",
+            "decidió ojear el libro en la biblioteca.",
+            "ella tubo suerte en el concurso.",
+            "ha echo un trabajo excelente.",
+            "decidieron revelar contra la injusticia.",
+            "espera que la hierba el agua.",
+            "no ay tiempo para perder.",
+            "estaban ablando de política.",
+            "es un problema grabe.",
+            "el bello corporal es natural.",
+            "él a llegado temprano.",
+            "¿bienes mañana?",
+            "se calló al suelo.",
+            "ella sabia la verdad."
+        ]
+        
+        # Save document to storage
+        doc_dir = Path(storage_dir) / demo_user.id / demo_project.id / "documents"
+        doc_dir.mkdir(parents=True, exist_ok=True)
+        doc_path = doc_dir / "documento_ejemplo.docx"
+        write_paragraphs(original_text, str(doc_path))
+        
         demo_doc = Document(
             project_id=demo_project.id,
             name="documento_ejemplo.docx",
-            kind=DocumentKind.docx
+            kind=DocumentKind.docx,
+            path=str(doc_path)
         )
         session.add(demo_doc)
         session.commit()
         session.refresh(demo_doc)
-        print(f"✅ Created demo document: {demo_doc.id}")
+        print(f"✅ Created demo document: {demo_doc.id} at {doc_path}")
 
         # Create demo run with specific ID for the frontend URL
         demo_run = Run(
@@ -276,6 +304,22 @@ def setup_demo_data():
         session.add(export_md)
 
         # Persist suggestions to database
+        # First, tokenize the document to get correct token IDs
+        from corrector.text_utils import tokenize
+        from corrector.docx_utils import read_paragraphs
+        
+        paragraphs = read_paragraphs(str(doc_path))
+        full_text = "\n".join(paragraphs)
+        tokens = tokenize(full_text)
+        
+        # Build a map of (line, original_word) -> token_id for word tokens
+        word_to_token_id = {}
+        for tok in tokens:
+            if tok.kind == "word":
+                key = (tok.line, tok.text.lower())
+                if key not in word_to_token_id:
+                    word_to_token_id[key] = tok.id
+        
         print(f"💾 Creating {len(SAMPLE_CORRECTIONS)} suggestions in database...")
         for correction in SAMPLE_CORRECTIONS:
             # Classify suggestion type based on reason
@@ -299,10 +343,18 @@ def setup_demo_data():
             elif "[ELIMINACIÓN]" in correction["reason"]:
                 severity = SuggestionSeverity.warning
             
+            # Find correct token_id based on line and original word
+            key = (correction["line"], correction["original"].lower())
+            real_token_id = word_to_token_id.get(key)
+            
+            if real_token_id is None:
+                print(f"⚠️  Warning: Could not find token_id for line={correction['line']} word='{correction['original']}'")
+                continue
+            
             suggestion = Suggestion(
                 run_id=demo_run.id,
                 document_id=demo_doc.id,
-                token_id=correction["token_id"],
+                token_id=real_token_id,
                 line=correction["line"],
                 suggestion_type=suggestion_type,
                 severity=severity,
