@@ -178,35 +178,47 @@ def setup_demo_data():
             print("✅ Demo project already exists, checking files...")
             # Recreate demo document files if they don't exist (ephemeral storage)
             from corrector.docx_utils import write_paragraphs
-            
+
             demo_docs = session.exec(
                 select(Document).where(Document.project_id == demo_project.id)
             ).all()
-            
+
+            original_text = [
+                "La baca mugía en el prado.",
+                "espero que halla terminado el trabajo.",
+                "decidió ojear el libro en la biblioteca.",
+                "ella tubo suerte en el concurso.",
+                "ha echo un trabajo excelente.",
+                "decidieron revelar contra la injusticia.",
+                "espera que la hierba el agua.",
+                "no ay tiempo para perder.",
+                "estaban ablando de política.",
+                "es un problema grabe.",
+                "el bello corporal es natural.",
+                "él a llegado temprano.",
+                "¿bienes mañana?",
+                "se calló al suelo.",
+                "ella sabia la verdad."
+            ]
+
             for doc in demo_docs:
+                # Recreate from DB backup if available, otherwise use default content
+                content = doc.content_backup.split("\n") if doc.content_backup else original_text
+
                 if not Path(doc.path).exists():
                     print(f"⚠️  Demo file missing: {doc.path}, recreating...")
-                    original_text = [
-                        "La baca mugía en el prado.",
-                        "espero que halla terminado el trabajo.",
-                        "decidió ojear el libro en la biblioteca.",
-                        "ella tubo suerte en el concurso.",
-                        "ha echo un trabajo excelente.",
-                        "decidieron revelar contra la injusticia.",
-                        "espera que la hierba el agua.",
-                        "no ay tiempo para perder.",
-                        "estaban ablando de política.",
-                        "es un problema grabe.",
-                        "el bello corporal es natural.",
-                        "él a llegado temprano.",
-                        "¿bienes mañana?",
-                        "se calló al suelo.",
-                        "ella sabia la verdad."
-                    ]
                     doc_dir = Path(doc.path).parent
                     doc_dir.mkdir(parents=True, exist_ok=True)
-                    write_paragraphs(original_text, doc.path)
+                    write_paragraphs(content, doc.path)
                     print(f"✅ Recreated demo file: {doc.path}")
+
+                # Ensure content_backup is set
+                if not doc.content_backup:
+                    doc.content_backup = "\n".join(original_text)
+                    session.add(doc)
+                    print(f"✅ Saved content backup for: {doc.name}")
+
+            session.commit()
             return  # Don't create duplicate demo data
 
         # Create demo project
@@ -252,7 +264,8 @@ def setup_demo_data():
             project_id=demo_project.id,
             name="documento_ejemplo.docx",
             kind=DocumentKind.docx,
-            path=str(doc_path)
+            path=str(doc_path),
+            content_backup="\n".join(original_text)  # Store content in DB for ephemeral storage
         )
         session.add(demo_doc)
         session.commit()
