@@ -115,6 +115,13 @@ def create_app() -> "FastAPI":  # type: ignore
         def _start_worker():  # pragma: no cover
             print("🚀 Starting worker...")
 
+            # Run database migrations
+            try:
+                from .migrate import run_migrations
+                run_migrations()
+            except Exception as e:
+                print(f"⚠️  Migration error: {e}")
+
             # Ensure demo user exists with correct plan
             try:
                 with session_scope() as session:
