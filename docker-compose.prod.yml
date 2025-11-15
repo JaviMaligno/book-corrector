@@ -1,0 +1,82 @@
+# Docker Compose for Production (Oracle Cloud)
+# Optimized for API-only deployment with nginx reverse proxy
+
+version: "3.9"
+
+services:
+  corrector:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: corrector-api
+    restart: always
+    environment:
+      # Load from .env file
+      - STORAGE_DIR=/data
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./local.db}
+      - DEMO_PLAN=${DEMO_PLAN:-free}
+      - SYSTEM_MAX_WORKERS=${SYSTEM_MAX_WORKERS:-2}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      # Azure OpenAI (optional)
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME:-}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-}
+      - AZURE_OPENAI_MODEL_NAME=${AZURE_OPENAI_MODEL_NAME:-}
+    volumes:
+      # Persistent storage for database and uploaded files
+      - corrector_data:/data
+      # Bind mount for SQLite database (if using local DB)
+      - ./local.db:/app/local.db
+    ports:
+      # Expose on localhost only (nginx will proxy)
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend (optional - uncomment if you want to serve the web interface)
+  # web:
+  #   build:
+  #     context: .
+  #     dockerfile: web/Dockerfile.prod
+  #   container_name: corrector-web
+  #   restart: always
+  #   environment:
+  #     # Point to API via nginx (same domain)
+  #     - VITE_API_URL=http://localhost
+  #   ports:
+  #     - "127.0.0.1:8080:80"
+  #   depends_on:
+  #     - corrector
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+
+volumes:
+  corrector_data:
+    driver: local
+
+# Notes for Oracle Cloud:
+# 1. Run with: docker-compose -f docker-compose.prod.yml up -d
+# 2. nginx will proxy external requests to localhost:8000
+# 3. Logs are limited to 30MB per service (10MB × 3 files)
+# 4. Health checks ensure container restarts if unhealthy
+# 5. restart: always ensures service survives reboots
