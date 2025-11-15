@@ -9,3 +9,4 @@ python-multipart>=0.0.9
 email-validator>=2.0.0
 pydantic>=2.4
 openai>=1.12.0
+psycopg2-binary>=2.9.9  # PostgreSQL driver for Render/production
