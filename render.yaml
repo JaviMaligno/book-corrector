@@ -32,7 +32,7 @@ services:
         value: /tmp  # Free tier: ephemeral storage (cleared on restart)
 
       - key: DEMO_PLAN
-        value: free
+        value: premium  # Enable AI for demo user
 
       - key: SYSTEM_MAX_WORKERS
         value: 2
