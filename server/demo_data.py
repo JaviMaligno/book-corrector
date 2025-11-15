@@ -175,8 +175,39 @@ def setup_demo_data():
         ).first()
 
         if demo_project:
-            print("✅ Demo project already exists, skipping")
-            return
+            print("✅ Demo project already exists, checking files...")
+            # Recreate demo document files if they don't exist (ephemeral storage)
+            from corrector.docx_utils import write_paragraphs
+            
+            demo_docs = session.exec(
+                select(Document).where(Document.project_id == demo_project.id)
+            ).all()
+            
+            for doc in demo_docs:
+                if not Path(doc.path).exists():
+                    print(f"⚠️  Demo file missing: {doc.path}, recreating...")
+                    original_text = [
+                        "La baca mugía en el prado.",
+                        "espero que halla terminado el trabajo.",
+                        "decidió ojear el libro en la biblioteca.",
+                        "ella tubo suerte en el concurso.",
+                        "ha echo un trabajo excelente.",
+                        "decidieron revelar contra la injusticia.",
+                        "espera que la hierba el agua.",
+                        "no ay tiempo para perder.",
+                        "estaban ablando de política.",
+                        "es un problema grabe.",
+                        "el bello corporal es natural.",
+                        "él a llegado temprano.",
+                        "¿bienes mañana?",
+                        "se calló al suelo.",
+                        "ella sabia la verdad."
+                    ]
+                    doc_dir = Path(doc.path).parent
+                    doc_dir.mkdir(parents=True, exist_ok=True)
+                    write_paragraphs(original_text, doc.path)
+                    print(f"✅ Recreated demo file: {doc.path}")
+            return  # Don't create duplicate demo data
 
         # Create demo project
         demo_project = Project(
