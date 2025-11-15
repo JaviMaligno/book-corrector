@@ -1,0 +1,60 @@
+# GitHub Actions Workflow - Keep Render Service Alive
+# Pings the health endpoint every 10 minutes to prevent sleep (15min timeout)
+#
+# Usage:
+# 1. Replace YOUR_RENDER_URL with your actual Render URL
+# 2. Commit and push this file to your repo
+# 3. GitHub Actions will run automatically
+#
+# Note: GitHub Free tier includes 2000 minutes/month (enough for this)
+
+name: Keep Render Alive
+
+on:
+  schedule:
+    # Every 10 minutes (before the 15-minute sleep timeout)
+    - cron: '*/10 * * * *'
+
+  # Allow manual trigger from Actions tab
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Ping Render health endpoint
+        run: |
+          echo "Pinging Render service at $(date)"
+
+          # Replace with your actual Render URL
+          # Get it from: Render Dashboard → corrector-api → URL
+          RENDER_URL="https://corrector-api.onrender.com"
+
+          # Ping health endpoint
+          response=$(curl -s -o /dev/null -w "%{http_code}" -f "$RENDER_URL/health" || echo "failed")
+
+          if [ "$response" = "200" ]; then
+            echo "✓ Service is alive (HTTP 200)"
+          else
+            echo "⚠ Unexpected response: $response"
+            exit 1
+          fi
+
+      - name: Log result
+        if: always()
+        run: echo "Keep-alive ping completed at $(date)"
+
+# Notes:
+# - This workflow uses GitHub-hosted runners (free for public repos)
+# - Private repos get 2000 free minutes/month (this uses ~60min/month)
+# - Workflow runs 6 times/hour × 24 hours = 144 pings/day
+# - Alternative: Use cron-job.org (unlimited, no GitHub Actions quota)
+#
+# To disable:
+# - Delete this file or comment out the 'schedule' section
+#
+# To check if it's working:
+# - Go to Actions tab in GitHub
+# - See "Keep Render Alive" workflow runs
