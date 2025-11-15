@@ -54,7 +54,7 @@ class Worker:
         if self._thread and self._thread.is_alive():
             return
         self._stop.clear()
-        self._thread = threading.Thread(target=self._run_loop, name="worker", daemon=True)
+        self._thread = threading.Thread(target=self._run_loop, name="worker", daemon=False)
         self._thread.start()
         logger.info("Worker started")
 
