@@ -29,7 +29,7 @@ services:
           property: connectionString
 
       - key: STORAGE_DIR
-        value: /data
+        value: /tmp  # Free tier: ephemeral storage (cleared on restart)
 
       - key: DEMO_PLAN
         value: free
@@ -47,11 +47,13 @@ services:
       - key: PYTHONDONTWRITEBYTECODE
         value: 1
 
-    # Persistent disk for file uploads/outputs
-    disk:
-      name: corrector-storage
-      mountPath: /data
-      sizeGB: 1  # Free tier: 1GB
+    # Note: Persistent disks NOT available on free tier
+    # Files in /tmp are ephemeral (cleared on restart/redeploy)
+    # For persistent storage, use external services:
+    #   - Cloudflare R2 (10GB free): https://www.cloudflare.com/products/r2/
+    #   - Supabase Storage (1GB free): https://supabase.com/storage
+    #   - AWS S3 free tier (5GB for 12 months)
+    # Or upgrade to Starter plan ($7/month) for 1GB persistent disk
 
 # Databases
 databases:
@@ -77,7 +79,10 @@ databases:
 #    - App already uses in-process workers (server/worker.py)
 #    - Works fine on free tier with single web service
 #
-# 4. Disk storage: 1GB included (upgradeable to 10GB for $1/month)
+# 4. File storage on free tier:
+#    - /tmp directory available (ephemeral - cleared on restart)
+#    - For persistent files, integrate external storage (see comments above)
+#    - Or upgrade to Starter plan ($7/month) for 1GB persistent disk
 #
 # 5. First deploy may take 5-10 minutes (Docker build)
 #    - Subsequent deploys are faster (cached layers)
