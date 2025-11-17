@@ -202,10 +202,14 @@ def setup_demo_data():
             ]
 
             for doc in demo_docs:
-                # Skip documents without a valid path
+                # Fix documents with no path (from before the path fix was deployed)
                 if not doc.path:
-                    print(f"⚠️  Document {doc.name} has no path, skipping file recreation")
-                    continue
+                    print(f"⚠️  Document {doc.name} has no path, fixing...")
+                    doc_dir = Path(storage_dir) / demo_user.id / demo_project.id / "documents"
+                    doc_dir.mkdir(parents=True, exist_ok=True)
+                    doc.path = str(doc_dir / doc.name)
+                    session.add(doc)
+                    print(f"✅ Fixed document path: {doc.path}")
 
                 # Recreate from DB backup if available, otherwise use default content
                 content = doc.content_backup.split("\n") if doc.content_backup else original_text
