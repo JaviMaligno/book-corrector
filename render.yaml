@@ -54,7 +54,7 @@ services:
     branch: alternative-free-hosting
 
     # Build configuration
-    buildCommand: cd web && npm ci && npm run build
+    buildCommand: cd web && npm install && npm run build
     staticPublishPath: ./web/dist
 
     # SPA routing - all routes serve index.html for React Router
