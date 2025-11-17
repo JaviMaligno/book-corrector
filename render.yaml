@@ -10,7 +10,7 @@ services:
     dockerContext: .
     plan: free
     region: oregon  # or frankfurt, singapore
-    branch: main
+    branch: alternative-free-hosting
 
     # Health check endpoint
     healthCheckPath: /health
@@ -46,6 +46,44 @@ services:
 
       - key: PYTHONDONTWRITEBYTECODE
         value: 1
+
+  # React Frontend (Static Site)
+  - type: web
+    name: corrector-web
+    env: static
+    plan: starter  # Free tier, no sleep for static sites
+    region: oregon  # Same region as backend
+    branch: alternative-free-hosting
+
+    # Build configuration
+    buildCommand: cd web && npm ci && npm run build
+    staticPublishPath: ./web/dist
+
+    # SPA routing - all routes serve index.html for React Router
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    # Environment variables (baked into build)
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: corrector-api
+          envVarKey: RENDER_EXTERNAL_URL
+
+    # Security headers
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
 
     # Note: Persistent disks NOT available on free tier
     # Files in /tmp are ephemeral (cleared on restart/redeploy)

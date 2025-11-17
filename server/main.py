@@ -42,16 +42,31 @@ def create_app() -> "FastAPI":  # type: ignore
 
     # CORS middleware
     if CORSMiddleware is not None:
+        # Base allowed origins (localhost for development)
+        allowed_origins = [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:8080"
+        ]
+
+        # Add production frontend URL from environment (for Render deployment)
+        frontend_url = os.environ.get("FRONTEND_URL")
+        if frontend_url:
+            allowed_origins.append(frontend_url)
+
+        # Fallback: allow all Render subdomains for corrector-web
+        # This handles the auto-generated URLs like https://corrector-web-xxx.onrender.com
+        allowed_origins.extend([
+            "https://corrector-web.onrender.com",  # If custom domain is set
+        ])
+
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=[
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://localhost:8080",
-                "http://127.0.0.1:5173",
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:8080"
-            ],
+            allow_origins=allowed_origins,
+            allow_origin_regex=r"https://corrector-web.*\.onrender\.com",  # Matches corrector-web-*.onrender.com
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
