@@ -72,6 +72,7 @@ Estado de alto nivel del backend (API, datos, colas, límites, despliegue). Mant
 
 ## Despliegue
 - [x] Dockerfile multi‑stage y `docker-compose.yml` con volumen de `storage`
+- [x] Despliegue en Render (backend + DB) usando blueprint `render.yaml` desde rama `main`
 - [ ] Compose/plantillas para Postgres/Redis/MinIO (escalado)
 
 ## Documentación y tests

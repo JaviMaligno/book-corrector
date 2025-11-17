@@ -17,7 +17,7 @@
 - [ ] Autenticación (guest/usuario) y límites por plan.
 - [ ] SSE/WebSocket para progreso en tiempo real.
 - [ ] Visor DOCX (track changes) embebido o descarga mejorada.
-- [ ] CI/CD y previsualizaciones (PRs) del frontend.
+- [x] CI/CD básico del frontend en Render (deploy estático desde rama `main`)
 ## Revisión interactiva (implementado S3)
 - [x] Detección automática modo servidor/legacy en `CorrectionsView`.
 - [x] Integración con endpoints backend `/suggestions/*` (list, patch, bulk, accept-all, reject-all, export).

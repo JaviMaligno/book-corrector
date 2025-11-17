@@ -4,21 +4,21 @@ Guide for deploying the React frontend to Render alongside the backend API.
 
 ## Overview
 
-The frontend is configured as a **static site** on Render, deployed from the same repository as the backend. Both services auto-deploy from the `alternative-free-hosting` branch.
+The frontend is configured as a **static site** on Render, deployed from the same repository as the backend. Both services auto-deploy from the `main` branch.
 
 ## Architecture
 
 - **Backend**: [corrector-api](render.yaml#L7) - FastAPI Docker service
 - **Frontend**: [corrector-web](render.yaml#L51) - React static site (Vite build)
 - **Database**: PostgreSQL (free tier, 90 days)
-- **Branch**: `alternative-free-hosting` (will be merged to `main` later)
+- **Branch**: `main`
 
 ## Prerequisites
 
 - [x] Backend already deployed on Render
 - [x] `render.yaml` updated with frontend service configuration
 - [x] CORS configured in `server/main.py` to allow frontend domain
-- [x] Changes committed to `alternative-free-hosting` branch
+- [x] Changes committed to `main` branch
 
 ## Deployment Steps
 
@@ -26,14 +26,14 @@ The frontend is configured as a **static site** on Render, deployed from the sam
 
 ```bash
 # Ensure you're on the correct branch
-git checkout alternative-free-hosting
+git checkout main
 
 # Commit the updated configuration
 git add render.yaml server/main.py
 git commit -m "Add frontend static site deployment to Render"
 
 # Push to GitHub
-git push origin alternative-free-hosting
+git push origin main
 ```
 
 ### 2. Render Auto-Deploys
@@ -261,24 +261,9 @@ If you need:
 
 Upgrade in Render dashboard → Service → Settings → Plan
 
-## Changing Branch to Main (Future)
+## Branch configuration
 
-When you merge `alternative-free-hosting` → `main`:
-
-### Option A: Update in Dashboard
-1. Render dashboard → Service → Settings
-2. Change **Branch** from `alternative-free-hosting` to `main`
-3. Click **Save** (triggers redeploy)
-4. Repeat for both services (frontend + backend)
-
-### Option B: Update render.yaml
-1. Edit `render.yaml`:
-   ```yaml
-   # Change both services
-   branch: main
-   ```
-2. Commit and push to `main`
-3. Render auto-updates
+Both backend and frontend services are configured to deploy directly from the `main` branch via `render.yaml`. Any push to `main` will trigger a new deployment of both services.
 
 ## Monitoring
 
@@ -326,9 +311,8 @@ To use your own domain (e.g., `app.mydomain.com`):
 After deployment:
 - ✅ Frontend: `https://corrector-web-xxx.onrender.com`
 - ✅ Backend: `https://corrector-api-xxx.onrender.com`
-- ✅ Auto-deploy from `alternative-free-hosting` branch
+- ✅ Auto-deploy from `main` branch
 - ✅ CORS configured (frontend ↔ backend)
 - ✅ Static site (no sleep, fast CDN)
-- ✅ Ready to merge to `main` when needed
 
 **Next Steps**: Test the full workflow and verify all features work in production!

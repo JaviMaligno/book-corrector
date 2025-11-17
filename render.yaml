@@ -10,7 +10,7 @@ services:
     dockerContext: .
     plan: free
     region: oregon  # or frankfurt, singapore
-    branch: alternative-free-hosting
+    branch: main
 
     # Health check endpoint
     healthCheckPath: /health
@@ -51,7 +51,7 @@ services:
   - type: web
     name: corrector-web
     env: static
-    branch: alternative-free-hosting
+    branch: main
 
     # Build configuration
     buildCommand: cd web && npm install && npm run build
