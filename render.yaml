@@ -1,0 +1,129 @@
+# Render Blueprint for Spanish Text Corrector
+# https://render.com/docs/blueprint-spec
+
+services:
+  # FastAPI Backend
+  - type: web
+    name: corrector-api
+    runtime: docker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon  # or frankfurt, singapore
+    branch: alternative-free-hosting
+
+    # Health check endpoint
+    healthCheckPath: /health
+
+    # Environment variables
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false  # Set manually in Render dashboard (secret)
+
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+
+      - key: DATABASE_URL
+        fromDatabase:
+          name: corrector-db
+          property: connectionString
+
+      - key: STORAGE_DIR
+        value: /tmp  # Free tier: ephemeral storage (cleared on restart)
+
+      - key: DEMO_PLAN
+        value: premium  # Enable AI for demo user
+
+      - key: SYSTEM_MAX_WORKERS
+        value: 2
+
+      - key: LOG_LEVEL
+        value: info
+
+      # Python settings
+      - key: PYTHONUNBUFFERED
+        value: 1
+
+      - key: PYTHONDONTWRITEBYTECODE
+        value: 1
+
+  # React Frontend (Static Site)
+  - type: web
+    name: corrector-web
+    env: static
+    branch: alternative-free-hosting
+
+    # Build configuration
+    buildCommand: cd web && npm install && npm run build
+    staticPublishPath: ./web/dist
+
+    # SPA routing - all routes serve index.html for React Router
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    # Environment variables (baked into build)
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: corrector-api
+          envVarKey: RENDER_EXTERNAL_URL
+
+    # Security headers
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+
+    # Note: Persistent disks NOT available on free tier
+    # Files in /tmp are ephemeral (cleared on restart/redeploy)
+    # For persistent storage, use external services:
+    #   - Cloudflare R2 (10GB free): https://www.cloudflare.com/products/r2/
+    #   - Supabase Storage (1GB free): https://supabase.com/storage
+    #   - AWS S3 free tier (5GB for 12 months)
+    # Or upgrade to Starter plan ($7/month) for 1GB persistent disk
+
+# Databases
+databases:
+  # PostgreSQL database (Neon recommended for long-term free tier)
+  # Render's free PostgreSQL expires after 90 days
+  # For production, use Neon Postgres (see guide)
+  - name: corrector-db
+    databaseName: corrector
+    plan: free  # 90 days free, then $7/month
+    # user: corrector  # Auto-generated
+    # Note: Migrate to Neon Postgres for permanent free tier
+
+# Notes:
+# 1. Free web services sleep after 15 min of inactivity
+#    - Use external keep-alive service (cron-job.org)
+#    - Or upgrade to Starter plan ($7/month for no sleep)
+#
+# 2. PostgreSQL free tier expires after 90 days
+#    - Recommended: Use Neon Postgres (free forever)
+#    - Set DATABASE_URL manually to Neon connection string
+#
+# 3. Background workers not available on free tier
+#    - App already uses in-process workers (server/worker.py)
+#    - Works fine on free tier with single web service
+#
+# 4. File storage on free tier:
+#    - /tmp directory available (ephemeral - cleared on restart)
+#    - For persistent files, integrate external storage (see comments above)
+#    - Or upgrade to Starter plan ($7/month) for 1GB persistent disk
+#
+# 5. First deploy may take 5-10 minutes (Docker build)
+#    - Subsequent deploys are faster (cached layers)
+#
+# 6. To deploy:
+#    - Push this file to your GitHub repo
+#    - Connect repo to Render
+#    - Render auto-detects render.yaml and deploys

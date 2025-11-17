@@ -54,7 +54,7 @@ class Worker:
         if self._thread and self._thread.is_alive():
             return
         self._stop.clear()
-        self._thread = threading.Thread(target=self._run_loop, name="worker", daemon=True)
+        self._thread = threading.Thread(target=self._run_loop, name="worker", daemon=False)
         self._thread.start()
         logger.info("Worker started")
 
@@ -113,9 +113,22 @@ class Worker:
             self._mark_failed(task, reason="missing document path")
             return
         input_path = Path(doc_path)
+
+        # Auto-recreate file from DB backup if missing (ephemeral storage)
         if not input_path.exists():
-            self._mark_failed(task, reason="document not found")
-            return
+            logger.warning(f"Document file missing: {doc_path}, checking DB backup...")
+            with session_scope() as sess:
+                doc_rec = sess.get(Document, task.document_id)
+                if doc_rec and doc_rec.content_backup:
+                    logger.info(f"Recreating document from DB backup: {doc_name}")
+                    input_path.parent.mkdir(parents=True, exist_ok=True)
+                    from corrector.docx_utils import write_paragraphs
+                    content_lines = doc_rec.content_backup.split("\n")
+                    write_paragraphs(content_lines, str(input_path))
+                    logger.info(f"✅ File recreated successfully: {input_path}")
+                else:
+                    self._mark_failed(task, reason="document not found and no backup available")
+                    return
 
         out_base = storage_base() / task.user_id / task.project_id / "runs" / task.run_id
         out_base.mkdir(parents=True, exist_ok=True)

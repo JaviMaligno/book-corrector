@@ -42,16 +42,31 @@ def create_app() -> "FastAPI":  # type: ignore
 
     # CORS middleware
     if CORSMiddleware is not None:
+        # Base allowed origins (localhost for development)
+        allowed_origins = [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:8080"
+        ]
+
+        # Add production frontend URL from environment (for Render deployment)
+        frontend_url = os.environ.get("FRONTEND_URL")
+        if frontend_url:
+            allowed_origins.append(frontend_url)
+
+        # Fallback: allow all Render subdomains for corrector-web
+        # This handles the auto-generated URLs like https://corrector-web-xxx.onrender.com
+        allowed_origins.extend([
+            "https://corrector-web.onrender.com",  # If custom domain is set
+        ])
+
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=[
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://localhost:8080",
-                "http://127.0.0.1:5173",
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:8080"
-            ],
+            allow_origins=allowed_origins,
+            allow_origin_regex=r"https://corrector-web.*\.onrender\.com",  # Matches corrector-web-*.onrender.com
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
@@ -115,22 +130,37 @@ def create_app() -> "FastAPI":  # type: ignore
         def _start_worker():  # pragma: no cover
             print("🚀 Starting worker...")
 
-            # Ensure demo user exists
+            # Run database migrations
+            try:
+                from .migrate import run_migrations
+                run_migrations()
+            except Exception as e:
+                print(f"⚠️  Migration error: {e}")
+
+            # Ensure demo user exists with correct plan
             try:
                 with session_scope() as session:
                     from .auth import hash_password
+                    demo_plan = os.environ.get("DEMO_PLAN", "free")
                     demo_user = session.exec(select(User).where(User.email == "demo@example.com")).first()
                     if not demo_user:
                         demo_user = User(
                             email="demo@example.com",
                             password_hash=hash_password("demo123"),
-                            role="free"
+                            role=demo_plan
                         )
                         session.add(demo_user)
                         session.commit()
-                        print("✅ Created demo user: demo@example.com / demo123")
+                        print(f"✅ Created demo user: demo@example.com / demo123 (plan: {demo_plan})")
                     else:
-                        print("✅ Demo user already exists")
+                        # Update role if plan changed
+                        if demo_user.role != demo_plan:
+                            demo_user.role = demo_plan
+                            session.add(demo_user)
+                            session.commit()
+                            print(f"✅ Updated demo user plan: {demo_plan}")
+                        else:
+                            print(f"✅ Demo user already exists (plan: {demo_plan})")
             except Exception as e:
                 print(f"⚠️  Error ensuring demo user: {e}")
 
@@ -160,7 +190,7 @@ def create_app() -> "FastAPI":  # type: ignore
                             project_id=run.project_id,
                             documents=[rd.document_id],
                             mode=run.mode.value if hasattr(run.mode, "value") else str(run.mode),
-                            use_ai=False,
+                            use_ai=rd.use_ai if hasattr(rd, 'use_ai') else False,
                         )
                         get_scheduler().enqueue_run(job)
             except Exception as e:

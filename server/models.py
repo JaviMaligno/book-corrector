@@ -54,6 +54,7 @@ class Document(SQLModel, table=True):
     kind: DocumentKind = Field(default=DocumentKind.docx)
     checksum: Optional[str] = None
     status: DocumentStatus = Field(default=DocumentStatus.new)
+    content_backup: Optional[str] = None  # Stores content for demo/ephemeral storage
 
 
 
