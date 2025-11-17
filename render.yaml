@@ -51,8 +51,6 @@ services:
   - type: web
     name: corrector-web
     env: static
-    plan: starter  # Free tier, no sleep for static sites
-    region: oregon  # Same region as backend
     branch: alternative-free-hosting
 
     # Build configuration

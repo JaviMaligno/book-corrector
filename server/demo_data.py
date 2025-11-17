@@ -202,6 +202,11 @@ def setup_demo_data():
             ]
 
             for doc in demo_docs:
+                # Skip documents without a valid path
+                if not doc.path:
+                    print(f"⚠️  Document {doc.name} has no path, skipping file recreation")
+                    continue
+
                 # Recreate from DB backup if available, otherwise use default content
                 content = doc.content_backup.split("\n") if doc.content_backup else original_text
 
