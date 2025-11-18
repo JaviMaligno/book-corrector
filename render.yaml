@@ -21,7 +21,7 @@ services:
         sync: false  # Set manually in Render dashboard (secret)
 
       - key: GEMINI_MODEL
-        value: gemini-2.5-flash
+        sync: false  # Set manually in Render dashboard (default: gemini-2.5-flash)
 
       - key: DATABASE_URL
         fromDatabase:
