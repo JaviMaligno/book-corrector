@@ -24,7 +24,7 @@ services:
         value: gemini-3-pro-preview
 
       - key: GEMINI_FALLBACK_MODEL
-        value: gemini-2.5-flash
+        value: gemini-2.5-pro
 
       - key: DATABASE_URL
         fromDatabase:
