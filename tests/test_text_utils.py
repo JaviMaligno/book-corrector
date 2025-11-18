@@ -10,11 +10,17 @@ def test_tokenize_and_apply_replacement():
     idx_ojear = words.index("ojear")
 
     corrs = [
-        Correction(token_id=idx_baca, replacement="vaca", reason="Confusión baca/vaca", original="baca"),
-        Correction(token_id=idx_ojear, replacement="hojear", reason="Confusión ojear/hojear", original="ojear"),
+        Correction(
+            token_id=idx_baca, replacement="vaca", reason="Confusión baca/vaca", original="baca"
+        ),
+        Correction(
+            token_id=idx_ojear,
+            replacement="hojear",
+            reason="Confusión ojear/hojear",
+            original="ojear",
+        ),
     ]
     new_tokens = apply_token_corrections(toks, corrs)
     out = detokenize(new_tokens)
     assert "vaca del coche" in out
     assert "a hojear el libro" in out
-

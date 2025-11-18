@@ -53,9 +53,7 @@ def _limits_for(role: str):
     return PREMIUM if role == "premium" else FREE
 
 
-def _ensure_documents(
-    session: Session, project_id: str, names: list[str]
-) -> list[Document]:
+def _ensure_documents(session: Session, project_id: str, names: list[str]) -> list[Document]:
     docs: list[Document] = []
     for name in names:
         d = session.exec(
@@ -107,12 +105,14 @@ def create_run(
         docs = _ensure_documents(session, req.project_id, req.documents)
     # Create RunDocument entries
     for d in docs:
-        rd = RunDocument(run_id=run.id, document_id=d.id, status=RunDocumentStatus.queued, use_ai=req.use_ai)
+        rd = RunDocument(
+            run_id=run.id, document_id=d.id, status=RunDocumentStatus.queued, use_ai=req.use_ai
+        )
         session.add(rd)
     session.commit()
 
     # Enqueue into in-memory scheduler (fair-share) and respect per-plan limits
-    role_value = current.role.value if hasattr(current.role, 'value') else str(current.role)
+    role_value = current.role.value if hasattr(current.role, "value") else str(current.role)
     sched = get_scheduler()
     sched.register_user(SUser(id=current.id, plan=role_value))
     job = RunJob(
@@ -207,7 +207,10 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 @router.get("/{run_id}/exports/{export_id}/download")
 def download_export(
-    run_id: str, export_id: str, session: Session = Depends(get_session), current: User = Depends(get_current_user)
+    run_id: str,
+    export_id: str,
+    session: Session = Depends(get_session),
+    current: User = Depends(get_current_user),
 ):
     exp = session.get(Export, export_id)
     if not exp or exp.run_id != run_id:
@@ -222,7 +225,13 @@ def export_csv(
 ):
     # Aggregate all JSONL logs for the run into a single CSV
     exps = session.exec(select(Export).where(Export.run_id == run_id)).all()
-    jsonl_paths = [e.path for e in exps if str(getattr(e, "kind", "")) in {"jsonl", "ExportKind.jsonl"} or str(e.kind).endswith("jsonl") or os.path.basename(e.path).endswith(".jsonl")]
+    jsonl_paths = [
+        e.path
+        for e in exps
+        if str(getattr(e, "kind", "")) in {"jsonl", "ExportKind.jsonl"}
+        or str(e.kind).endswith("jsonl")
+        or os.path.basename(e.path).endswith(".jsonl")
+    ]
     if not jsonl_paths:
         raise HTTPException(status_code=404, detail="No hay logs JSONL para este run")
 
@@ -280,7 +289,9 @@ def export_csv(
 
     filename = f"run_{run_id}_changelog.csv"
     return StreamingResponse(
-        iter_csv(), media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={filename}"}
+        iter_csv(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -305,7 +316,9 @@ def get_summary_md(
     exps = session.exec(select(Export).where(Export.run_id == run_id)).all()
     for e in exps:
         if os.path.basename(e.path).lower().endswith(".summary.md"):
-            return FileResponse(e.path, filename=os.path.basename(e.path), media_type="text/markdown")
+            return FileResponse(
+                e.path, filename=os.path.basename(e.path), media_type="text/markdown"
+            )
     raise HTTPException(status_code=404, detail="Carta de edición no encontrada")
 
 

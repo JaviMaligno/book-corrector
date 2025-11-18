@@ -20,6 +20,7 @@ class Settings(BaseModel):
     azure_openai_fallback_deployment_name: str | None = None
     azure_openai_fallback_api_version: str | None = None
 
+
 def get_settings() -> Settings:
     # Cargar variables desde .env si existe
     load_dotenv()

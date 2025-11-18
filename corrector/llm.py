@@ -33,4 +33,3 @@ def get_gemini_client() -> genai.Client:
         return genai.Client(api_key=api_key)
     except Exception as exc:  # pragma: no cover - depends on SDK internals
         raise LLMNotConfigured("Failed to create Gemini client.") from exc
-

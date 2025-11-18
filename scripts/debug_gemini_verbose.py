@@ -1,13 +1,15 @@
 """Script para ver la respuesta RAW de Gemini."""
+
 import json
 import sys
 from pathlib import Path
 
 # Configurar UTF-8 en Windows
-if sys.platform == 'win32':
+if sys.platform == "win32":
     import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 from corrector.docx_utils import read_paragraphs
 from corrector.llm import get_gemini_client
@@ -16,7 +18,7 @@ from corrector.prompt import build_json_prompt, load_base_prompt
 from corrector.text_utils import tokenize
 
 # Leer el archivo de entrada
-sample = Path(__file__).resolve().parent / 'tests' / 'samples' / 'gemini_live_input.docx'
+sample = Path(__file__).resolve().parent / "tests" / "samples" / "gemini_live_input.docx"
 paragraphs = read_paragraphs(str(sample))
 full_text = "\n".join(paragraphs)
 tokens = tokenize(full_text)
@@ -72,10 +74,10 @@ try:
         for i, cand in enumerate(resp.candidates):
             print(f"\n  Candidato {i}:")
             print(f"    content: {getattr(cand, 'content', None)}")
-            if hasattr(cand, 'content') and cand.content:
+            if hasattr(cand, "content") and cand.content:
                 content = cand.content
                 print(f"    content.parts: {getattr(content, 'parts', None)}")
-                if hasattr(content, 'parts'):
+                if hasattr(content, "parts"):
                     for j, part in enumerate(content.parts):
                         print(f"      Part {j}: {part}")
                         print(f"      Part dir: {[x for x in dir(part) if not x.startswith('_')]}")
@@ -83,6 +85,7 @@ try:
 except Exception as e:
     print(f"ERROR en método 1: {e}")
     import traceback
+
     traceback.print_exc()
 
 print("\n" + "=" * 80)
@@ -117,6 +120,7 @@ try:
 except Exception as e:
     print(f"ERROR en método 2: {e}")
     import traceback
+
     traceback.print_exc()
 
 print("\n" + "=" * 80)
@@ -125,5 +129,7 @@ print("=" * 80)
 print("Token 43 debería ser corregido:")
 print("  ID: 43")
 print(f"  Texto: '{tokens[43].text}'")
-print(f"  Contexto: '...{tokens[37].text} {tokens[39].text} {tokens[41].text} {tokens[43].text}...'")
+print(
+    f"  Contexto: '...{tokens[37].text} {tokens[39].text} {tokens[41].text} {tokens[43].text}...'"
+)
 print("  → Debería ser 'bello' (contexto estético)")

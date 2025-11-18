@@ -2,6 +2,7 @@
 Setup demo data for showcasing the corrector functionality.
 Creates sample projects, runs, and correction artifacts.
 """
+
 import json
 import os
 from pathlib import Path
@@ -36,7 +37,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "vaca",
         "reason": "Confusión léxica baca/vaca. 'Baca' se refiere al portaequipajes del coche, 'vaca' al animal bovino",
         "context": "La baca mugía en",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 18,
@@ -45,7 +46,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "haya",
         "reason": "Confusión léxica halla/haya. 'Halla' es del verbo hallar (encontrar), 'haya' del verbo haber o el árbol",
         "context": "espero que halla terminado",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 33,
@@ -54,7 +55,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "hojear",
         "reason": "Confusión léxica ojear/hojear. 'Ojear' es mirar, 'hojear' es pasar las páginas de un libro",
         "context": "decidió ojear el libro",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 47,
@@ -63,7 +64,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "tuvo",
         "reason": "Confusión léxica tubo/tuvo. 'Tubo' es un cilindro hueco, 'tuvo' es del verbo tener",
         "context": "ella tubo suerte",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 62,
@@ -72,7 +73,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "hecho",
         "reason": "Confusión léxica echo/hecho. 'Echo' es del verbo echar, 'hecho' es participio de hacer o un suceso",
         "context": "ha echo un trabajo",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 78,
@@ -81,7 +82,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "rebelar",
         "reason": "Confusión léxica revelar/rebelar. 'Revelar' es descubrir, 'rebelar' es sublevarse",
         "context": "decidieron revelar contra la injusticia",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 94,
@@ -90,7 +91,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "hierva",
         "reason": "Confusión léxica hierba/hierva. 'Hierba' es planta, 'hierva' es del verbo hervir",
         "context": "espera que la hierba el agua",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 112,
@@ -99,7 +100,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "hay",
         "reason": "Confusión léxica ay/hay. 'Ay' es interjección de dolor, 'hay' del verbo haber",
         "context": "no ay tiempo",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 128,
@@ -108,7 +109,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "hablando",
         "reason": "Confusión léxica ablando/hablando. 'Ablando' es del verbo ablandar, 'hablando' del verbo hablar",
         "context": "estaban ablando de política",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 145,
@@ -117,7 +118,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "grave",
         "reason": "Confusión léxica grabe/grave. 'Grabe' es del verbo grabar, 'grave' es algo serio",
         "context": "es un problema grabe",
-        "chunk_index": 0
+        "chunk_index": 0,
     },
     {
         "token_id": 163,
@@ -126,7 +127,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "vello",
         "reason": "Confusión léxica bello/vello. 'Bello' es hermoso, 'vello' es pelo fino del cuerpo",
         "context": "el bello corporal",
-        "chunk_index": 1
+        "chunk_index": 1,
     },
     {
         "token_id": 179,
@@ -135,7 +136,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "ha",
         "reason": "Confusión léxica a/ha. 'A' es preposición, 'ha' del verbo haber",
         "context": "él a llegado",
-        "chunk_index": 1
+        "chunk_index": 1,
     },
     {
         "token_id": 195,
@@ -144,7 +145,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "vienes",
         "reason": "Confusión léxica bienes/vienes. 'Bienes' son posesiones, 'vienes' del verbo venir",
         "context": "¿bienes mañana?",
-        "chunk_index": 1
+        "chunk_index": 1,
     },
     {
         "token_id": 212,
@@ -153,7 +154,7 @@ SAMPLE_CORRECTIONS = [
         "corrected": "cayó",
         "reason": "Confusión léxica calló/cayó. 'Calló' es del verbo callar, 'cayó' del verbo caer",
         "context": "se calló al suelo",
-        "chunk_index": 1
+        "chunk_index": 1,
     },
     {
         "token_id": 230,
@@ -162,8 +163,8 @@ SAMPLE_CORRECTIONS = [
         "corrected": "sabía",
         "reason": "Error ortográfico: falta tilde en 'sabía' (verbo saber, pretérito imperfecto)",
         "context": "ella sabia la verdad",
-        "chunk_index": 1
-    }
+        "chunk_index": 1,
+    },
 ]
 
 
@@ -182,10 +183,7 @@ def setup_demo_data():
 
         # Check if demo project already exists
         demo_project = session.exec(
-            select(Project).where(
-                Project.owner_id == demo_user.id,
-                Project.name == "Proyecto Demo"
-            )
+            select(Project).where(Project.owner_id == demo_user.id, Project.name == "Proyecto Demo")
         ).first()
 
         if demo_project:
@@ -212,7 +210,7 @@ def setup_demo_data():
                 "él a llegado temprano.",
                 "¿bienes mañana?",
                 "se calló al suelo.",
-                "ella sabia la verdad."
+                "ella sabia la verdad.",
             ]
 
             for doc in demo_docs:
@@ -245,11 +243,7 @@ def setup_demo_data():
             return  # Don't create duplicate demo data
 
         # Create demo project
-        demo_project = Project(
-            owner_id=demo_user.id,
-            name="Proyecto Demo",
-            lang_variant="es-ES"
-        )
+        demo_project = Project(owner_id=demo_user.id, name="Proyecto Demo", lang_variant="es-ES")
         session.add(demo_project)
         session.commit()
         session.refresh(demo_project)
@@ -257,7 +251,7 @@ def setup_demo_data():
 
         # Create demo document with original text
         from corrector.docx_utils import write_paragraphs
-        
+
         # Create document with original (incorrect) text
         original_text = [
             "La baca mugía en el prado.",
@@ -274,21 +268,21 @@ def setup_demo_data():
             "él a llegado temprano.",
             "¿bienes mañana?",
             "se calló al suelo.",
-            "ella sabia la verdad."
+            "ella sabia la verdad.",
         ]
-        
+
         # Save document to storage
         doc_dir = Path(storage_dir) / demo_user.id / demo_project.id / "documents"
         doc_dir.mkdir(parents=True, exist_ok=True)
         doc_path = doc_dir / "documento_ejemplo.docx"
         write_paragraphs(original_text, str(doc_path))
-        
+
         demo_doc = Document(
             project_id=demo_project.id,
             name="documento_ejemplo.docx",
             kind=DocumentKind.docx,
             path=str(doc_path),
-            content_backup="\n".join(original_text)  # Store content in DB for ephemeral storage
+            content_backup="\n".join(original_text),  # Store content in DB for ephemeral storage
         )
         session.add(demo_doc)
         session.commit()
@@ -301,7 +295,7 @@ def setup_demo_data():
             project_id=demo_project.id,
             submitted_by=demo_user.id,
             mode=RunMode.profesional,
-            status=RunStatus.completed
+            status=RunStatus.completed,
         )
         session.add(demo_run)
 
@@ -310,7 +304,7 @@ def setup_demo_data():
             run_id=demo_run.id,
             document_id=demo_doc.id,
             status=RunDocumentStatus.completed,
-            use_ai=True
+            use_ai=True,
         )
         session.add(run_doc)
         session.commit()
@@ -324,17 +318,14 @@ def setup_demo_data():
         print(f"✅ Created corrections file: {corrections_file}")
 
         # Create export record for corrections
-        export_jsonl = Export(
-            run_id=demo_run.id,
-            kind=ExportKind.jsonl,
-            path=str(corrections_file)
-        )
+        export_jsonl = Export(run_id=demo_run.id, kind=ExportKind.jsonl, path=str(corrections_file))
         session.add(export_jsonl)
 
         # Create a summary markdown file
         summary_file = artifacts_dir / f"{demo_run.id}_documento_ejemplo.summary.md"
         with open(summary_file, "w", encoding="utf-8") as f:
-            f.write(f"""# Resumen de Correcciones - Documento Ejemplo
+            f.write(
+                f"""# Resumen de Correcciones - Documento Ejemplo
 
 ## Estadísticas
 
@@ -360,25 +351,22 @@ def setup_demo_data():
 ---
 
 *Generado automáticamente por el Corrector de Textos*
-""")
+"""
+            )
         print(f"✅ Created summary file: {summary_file}")
 
-        export_md = Export(
-            run_id=demo_run.id,
-            kind=ExportKind.md,
-            path=str(summary_file)
-        )
+        export_md = Export(run_id=demo_run.id, kind=ExportKind.md, path=str(summary_file))
         session.add(export_md)
 
         # Persist suggestions to database
         # First, tokenize the document to get correct token IDs
         from corrector.docx_utils import read_paragraphs
         from corrector.text_utils import tokenize
-        
+
         paragraphs = read_paragraphs(str(doc_path))
         full_text = "\n".join(paragraphs)
         tokens = tokenize(full_text)
-        
+
         # Build a map of (line, original_word) -> token_id for word tokens
         word_to_token_id = {}
         for tok in tokens:
@@ -386,13 +374,13 @@ def setup_demo_data():
                 key = (tok.line, tok.text.lower())
                 if key not in word_to_token_id:
                     word_to_token_id[key] = tok.id
-        
+
         print(f"💾 Creating {len(SAMPLE_CORRECTIONS)} suggestions in database...")
         for correction in SAMPLE_CORRECTIONS:
             # Classify suggestion type based on reason
             reason_lower = correction["reason"].lower()
             suggestion_type = SuggestionType.otro
-            
+
             if any(kw in reason_lower for kw in ["ortografía", "ortografia", "spelling"]):
                 suggestion_type = SuggestionType.ortografia
             elif any(kw in reason_lower for kw in ["puntuación", "puntuacion", "punctuation"]):
@@ -401,23 +389,28 @@ def setup_demo_data():
                 suggestion_type = SuggestionType.concordancia
             elif any(kw in reason_lower for kw in ["estilo", "style"]):
                 suggestion_type = SuggestionType.estilo
-            elif any(kw in reason_lower for kw in ["léxico", "lexico", "lexical", "confusión", "confusion"]):
+            elif any(
+                kw in reason_lower
+                for kw in ["léxico", "lexico", "lexical", "confusión", "confusion"]
+            ):
                 suggestion_type = SuggestionType.lexico
-            
+
             severity = SuggestionSeverity.info
             if "error" in reason_lower:
                 severity = SuggestionSeverity.error
             elif "[ELIMINACIÓN]" in correction["reason"]:
                 severity = SuggestionSeverity.warning
-            
+
             # Find correct token_id based on line and original word
             key = (correction["line"], correction["original"].lower())
             real_token_id = word_to_token_id.get(key)
-            
+
             if real_token_id is None:
-                print(f"⚠️  Warning: Could not find token_id for line={correction['line']} word='{correction['original']}'")
+                print(
+                    f"⚠️  Warning: Could not find token_id for line={correction['line']} word='{correction['original']}'"
+                )
                 continue
-            
+
             suggestion = Suggestion(
                 run_id=demo_run.id,
                 document_id=demo_doc.id,

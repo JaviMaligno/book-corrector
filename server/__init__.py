@@ -6,4 +6,3 @@ work without external services at first, and be swappable to Postgres/Redis/Cele
 
 Note: FastAPI/SQLAlchemy are not added as hard dependencies in pyproject yet.
 """
-

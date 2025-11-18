@@ -52,7 +52,9 @@ def test_create_run_queue_and_status(client):
     headers = {"Authorization": f"Bearer {token}"}
 
     # Create a project
-    pr = client.post("/projects", json={"name": "Proyecto 1", "lang_variant": "es-ES"}, headers=headers)
+    pr = client.post(
+        "/projects", json={"name": "Proyecto 1", "lang_variant": "es-ES"}, headers=headers
+    )
     assert pr.status_code == 200
     project_id = pr.json()["id"]
 
@@ -84,6 +86,7 @@ def test_create_run_queue_and_status(client):
 
     # Poll status until completed or timeout
     import time
+
     for _ in range(50):
         r2 = client.get(f"/runs/{res['run_id']}", headers=headers)
         assert r2.status_code == 200

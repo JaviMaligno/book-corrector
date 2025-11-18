@@ -31,7 +31,6 @@ class Project(SQLModel, table=True):
     created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.utcnow())
 
 
-
 class DocumentKind(str, Enum):
     docx = "docx"
     txt = "txt"
@@ -54,7 +53,6 @@ class Document(SQLModel, table=True):
     checksum: str | None = None
     status: DocumentStatus = Field(default=DocumentStatus.new)
     content_backup: str | None = None  # Stores content for demo/ephemeral storage
-
 
 
 class RunMode(str, Enum):

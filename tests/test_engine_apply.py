@@ -33,6 +33,5 @@ def test_process_document_with_heuristic_corrector(tmp_path: Path):
     log_lines = log_path.read_text(encoding="utf-8").strip().splitlines()
     assert len(log_lines) >= 2
     # Quick shape check: JSON lines contain keys we expect
-    assert "\"original\"" in log_lines[0]
-    assert "\"corrected\"" in log_lines[0]
-
+    assert '"original"' in log_lines[0]
+    assert '"corrected"' in log_lines[0]

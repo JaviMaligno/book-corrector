@@ -1,4 +1,3 @@
-
 import re
 from pathlib import Path
 
@@ -40,19 +39,23 @@ class _ResponsesAPI:
         m_ojear = re.search(r"(\d+):W:ojear\b", prompt)
         corrections = []
         if m_baca:
-            corrections.append({
-                "token_id": int(m_baca.group(1)),
-                "replacement": "vaca",
-                "reason": "Confusión baca/vaca (techo del coche)",
-                "original": "baca",
-            })
+            corrections.append(
+                {
+                    "token_id": int(m_baca.group(1)),
+                    "replacement": "vaca",
+                    "reason": "Confusión baca/vaca (techo del coche)",
+                    "original": "baca",
+                }
+            )
         if m_ojear:
-            corrections.append({
-                "token_id": int(m_ojear.group(1)),
-                "replacement": "hojear",
-                "reason": "Confusión ojear/hojear (pasar páginas)",
-                "original": "ojear",
-            })
+            corrections.append(
+                {
+                    "token_id": int(m_ojear.group(1)),
+                    "replacement": "hojear",
+                    "reason": "Confusión ojear/hojear (pasar páginas)",
+                    "original": "ojear",
+                }
+            )
         fc = _FC("return_corrections", {"corrections": corrections})
         return _Resp([_Candidate(_Content([_Part(function_call=fc)]))])
 
@@ -76,13 +79,16 @@ def test_gemini_corrector_with_tools_preserves_proper_names(monkeypatch, tmp_pat
 
     # write minimal docx via fallback
     from corrector.docx_utils import read_paragraphs, write_paragraphs
+
     write_paragraphs(paragraphs, str(input_doc))
 
     out_doc = tmp_path / "salida.docx"
     log_json = tmp_path / "log.jsonl"
 
     corr = GeminiCorrector(base_prompt_text="")
-    process_document(str(input_doc), str(out_doc), str(log_json), corr, chunk_words=0, overlap_words=0)
+    process_document(
+        str(input_doc), str(out_doc), str(log_json), corr, chunk_words=0, overlap_words=0
+    )
 
     # Verify corrections applied and proper names preserved
     out_paras = read_paragraphs(str(out_doc))

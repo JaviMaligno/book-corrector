@@ -25,7 +25,7 @@ def tokenize(text: str) -> list[Token]:
     for m in pattern.finditer(text):
         if m.start() > i:
             # Unexpected gap; treat as raw text (fallback)
-            gap = text[i:m.start()]
+            gap = text[i : m.start()]
             tokens.append(Token(tid, gap, i, m.start(), "space", line))
             tid += 1
         if m.group(1):
@@ -96,7 +96,9 @@ def count_word_tokens(tokens: Sequence[Token]) -> int:
     return sum(1 for t in tokens if t.kind == "word")
 
 
-def split_tokens_in_chunks(tokens: Sequence[Token], max_words: int, overlap_words: int) -> list[tuple[int, int]]:
+def split_tokens_in_chunks(
+    tokens: Sequence[Token], max_words: int, overlap_words: int
+) -> list[tuple[int, int]]:
     """Return list of (start_idx, end_idx) token ranges for chunks.
 
     Chunks are contiguous slices of tokens with at most `max_words` word tokens. Adjacent
@@ -125,6 +127,7 @@ def split_tokens_in_chunks(tokens: Sequence[Token], max_words: int, overlap_word
         # Look back up to this many word tokens to find a sentence boundary
         lookback_words = 50
         j_adj = j
+
         # Helpers for boundaries/closers
         def _is_eos_punct(tok: Token) -> bool:
             return tok.kind == "punct" and tok.text in (".", "!", "?", "…")
@@ -142,6 +145,7 @@ def split_tokens_in_chunks(tokens: Sequence[Token], max_words: int, overlap_word
                 "”",
                 "’",
             )
+
         # Step back skipping trailing spaces/newlines
         k = j_adj - 1
         while k > i and tokens[k].kind in ("space", "newline"):
@@ -163,7 +167,9 @@ def split_tokens_in_chunks(tokens: Sequence[Token], max_words: int, overlap_word
                 if m >= i and _is_eos_punct(tokens[m]):
                     j_adj = m + 1
                     # extend forward to include closers and any following spaces/newlines
-                    while j_adj < n and (_is_closer(tokens[j_adj]) or tokens[j_adj].kind in ("space", "newline")):
+                    while j_adj < n and (
+                        _is_closer(tokens[j_adj]) or tokens[j_adj].kind in ("space", "newline")
+                    ):
                         j_adj += 1
                     break
             if tokens[k].kind == "word":
@@ -211,8 +217,10 @@ def _is_sentence_end_or_closer_seq(tokens: Sequence[Token], idx: int, min_idx: i
     t = tokens[idx]
     if t.kind == "newline":
         return True
+
     def _is_eos(tok: Token) -> bool:
         return tok.kind == "punct" and tok.text in (".", "!", "?", "…")
+
     def _is_closer(tok: Token) -> bool:
         return tok.kind == "punct" and tok.text in (
             ")",
@@ -226,6 +234,7 @@ def _is_sentence_end_or_closer_seq(tokens: Sequence[Token], idx: int, min_idx: i
             "”",
             "’",
         )
+
     # If current is EOS
     if _is_eos(t):
         return True
@@ -260,7 +269,11 @@ def sentence_bounds(tokens: Sequence[Token], center_index: int) -> tuple[int, in
         if _is_sentence_end_or_closer_seq(tokens, e, min_idx=s):
             e += 1
             # include any immediate closers following the EOS
-            while e < n and tokens[e].kind == "punct" and tokens[e].text in (")", "]", "}", '"', "'", "»", "«", "“", "”", "’"):
+            while (
+                e < n
+                and tokens[e].kind == "punct"
+                and tokens[e].text in (")", "]", "}", '"', "'", "»", "«", "“", "”", "’")
+            ):
                 e += 1
             break
         e += 1
@@ -270,7 +283,9 @@ def sentence_bounds(tokens: Sequence[Token], center_index: int) -> tuple[int, in
     return max(0, s), min(n, e)
 
 
-def build_sentence_context(tokens: Sequence[Token], center_index: int, max_chars: int | None = None) -> str:
+def build_sentence_context(
+    tokens: Sequence[Token], center_index: int, max_chars: int | None = None
+) -> str:
     s, e = sentence_bounds(tokens, center_index)
     text = "".join(t.text for t in tokens[s:e]).strip()
     if max_chars is not None and len(text) > max_chars:

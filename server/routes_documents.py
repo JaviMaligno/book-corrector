@@ -16,7 +16,9 @@ router = APIRouter(prefix="/projects/{project_id}/documents", tags=["documents"]
 
 @router.get("", response_model=list[Document])
 def list_documents(
-    project_id: str, session: Session = Depends(get_session), current: User = Depends(get_current_user)
+    project_id: str,
+    session: Session = Depends(get_session),
+    current: User = Depends(get_current_user),
 ):
     p = session.get(Project, project_id)
     if not p or p.owner_id != current.id:

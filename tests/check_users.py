@@ -11,12 +11,13 @@ from server.models import User
 try:
     with session_scope() as session:
         users = session.query(User).all()
-        print(f'Usuarios encontrados: {len(users)}')
+        print(f"Usuarios encontrados: {len(users)}")
         for user in users:
-            print(f'  - {user.email} (ID: {user.id})')
+            print(f"  - {user.email} (ID: {user.id})")
         if not users:
-            print('No hay usuarios registrados. Crea un usuario primero.')
+            print("No hay usuarios registrados. Crea un usuario primero.")
 except Exception as e:
-    print(f'Error: {e}')
+    print(f"Error: {e}")
     import traceback
+
     traceback.print_exc()

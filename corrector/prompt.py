@@ -13,12 +13,12 @@ def load_base_prompt(path: str | None = None) -> str:
     if p.exists():
         return p.read_text(encoding="utf-8")
     # Fallback default
-    return (
-        "Actúa como corrector profesional en español. Corrige ortografía, puntuación, gramática y usos confusos."
-    )
+    return "Actúa como corrector profesional en español. Corrige ortografía, puntuación, gramática y usos confusos."
 
 
-def build_json_prompt(base_prompt: str, tokens: list[Token], sanitize_for_azure: bool = False) -> str:
+def build_json_prompt(
+    base_prompt: str, tokens: list[Token], sanitize_for_azure: bool = False
+) -> str:
     """Build a compact instruction asking for precise token-level corrections.
 
     The model must only return JSON with structure:
@@ -62,7 +62,7 @@ def build_json_prompt(base_prompt: str, tokens: list[Token], sanitize_for_azure:
 
         schema = (
             "Return valid JSON UTF-8 without additional text. "
-            "Schema: {\"corrections\": [{\"token_id\": int, \"replacement\": str, \"reason\": str, \"original\"?: str}]}\n"
+            'Schema: {"corrections": [{"token_id": int, "replacement": str, "reason": str, "original"?: str}]}\n'
             "- token_id references the exact token index.\n"
             "- Review word/number tokens as needed.\n"
             "- Maintain proper capitalization and accents.\n"
@@ -81,7 +81,7 @@ def build_json_prompt(base_prompt: str, tokens: list[Token], sanitize_for_azure:
         schema = (
             "Si dispones de herramientas, llama a 'return_corrections' con la lista de correcciones. "
             "En ausencia de herramientas, responde SOLO con JSON válido UTF-8 sin texto adicional. "
-            "Esquema: {\"corrections\": [{\"token_id\": int, \"replacement\": str, \"reason\": str, \"original\"?: str}]}\n"
+            'Esquema: {"corrections": [{"token_id": int, "replacement": str, "reason": str, "original"?: str}]}\n'
             "- token_id apunta al índice exacto del token a corregir.\n"
             "- Solo corrige tokens de tipo palabra/número si es necesario (no reescribas todo).\n"
             "- Mantén mayúsculas adecuadas y acentos.\n"

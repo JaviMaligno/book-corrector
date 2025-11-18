@@ -20,13 +20,14 @@ import requests
 
 # Set UTF-8 encoding for Windows console
 if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 API_URL = "http://localhost:8001"
 EMAIL = "demo@example.com"
 PASSWORD = "demo123"
 CORRECCIONES_DIR = Path("correcciones")
 OUTPUT_DIR = Path("correcciones_finales")
+
 
 def main():
     # 1. Login
@@ -54,7 +55,14 @@ def main():
         return 1
 
     files_to_upload = [
-        ("files", (f.name, open(f, "rb"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+        (
+            "files",
+            (
+                f.name,
+                open(f, "rb"),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ),
+        )
         for f in docx_files
     ]
 
@@ -62,7 +70,7 @@ def main():
         resp = requests.post(
             f"{API_URL}/projects/{project_id}/documents/upload",
             headers=headers,
-            files=files_to_upload
+            files=files_to_upload,
         )
         resp.raise_for_status()
         uploaded_docs = resp.json()
@@ -78,7 +86,7 @@ def main():
     resp = requests.post(
         f"{API_URL}/runs",
         headers=headers,
-        json={"project_id": project_id, "document_ids": document_ids, "use_ai": True}
+        json={"project_id": project_id, "document_ids": document_ids, "use_ai": True},
     )
     resp.raise_for_status()
     run_id = resp.json()["run_id"]
@@ -142,6 +150,7 @@ def main():
     print(f"   Total de archivos: {len(list(OUTPUT_DIR.glob('*.docx')))}")
     return 0
 
+
 if __name__ == "__main__":
     try:
         sys.exit(main())
@@ -154,5 +163,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n[ERROR] Error inesperado: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

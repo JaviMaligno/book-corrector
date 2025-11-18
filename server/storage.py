@@ -64,4 +64,3 @@ def save_upload_for_project(
     dest_path = base / dest_name
     tmp_path.replace(dest_path)
     return dest_path, checksum, kind
-

@@ -14,4 +14,3 @@ def get_scheduler() -> InMemoryScheduler:
         sys_workers = int(os.environ.get("SYSTEM_MAX_WORKERS", str(SYSTEM_MAX_WORKERS)))
         _scheduler = InMemoryScheduler(system_max_workers=sys_workers)
     return _scheduler
-

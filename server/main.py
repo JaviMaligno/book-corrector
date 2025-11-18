@@ -16,9 +16,9 @@ from sqlmodel import select
 # Configure logging for the corrector engine
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(message)s',
-    datefmt='%H:%M:%S',
-    force=True  # Override any existing configuration
+    format="%(asctime)s - %(message)s",
+    datefmt="%H:%M:%S",
+    force=True,  # Override any existing configuration
 )
 
 from .db import init_db, session_scope
@@ -36,7 +36,7 @@ from .schemas import MeLimits
 
 def create_app() -> FastAPI:  # type: ignore
     if FastAPI is None:
-        raise RuntimeError("FastAPI is not installed. Please `pip install fastapi uvicorn`.\n" )
+        raise RuntimeError("FastAPI is not installed. Please `pip install fastapi uvicorn`.\n")
     app = FastAPI(title="Corrector Backend", version="0.1")
 
     # CORS middleware
@@ -48,7 +48,7 @@ def create_app() -> FastAPI:  # type: ignore
             "http://localhost:8080",
             "http://127.0.0.1:5173",
             "http://127.0.0.1:3000",
-            "http://127.0.0.1:8080"
+            "http://127.0.0.1:8080",
         ]
 
         # Add production frontend URL from environment (for Render deployment)
@@ -58,9 +58,11 @@ def create_app() -> FastAPI:  # type: ignore
 
         # Fallback: allow all Render subdomains for corrector-web
         # This handles the auto-generated URLs like https://corrector-web-xxx.onrender.com
-        allowed_origins.extend([
-            "https://corrector-web.onrender.com",  # If custom domain is set
-        ])
+        allowed_origins.extend(
+            [
+                "https://corrector-web.onrender.com",  # If custom domain is set
+            ]
+        )
 
         app.add_middleware(
             CORSMiddleware,
@@ -133,6 +135,7 @@ def create_app() -> FastAPI:  # type: ignore
             # Run database migrations
             try:
                 from .migrate import run_migrations
+
                 run_migrations()
             except Exception as e:
                 print(f"⚠️  Migration error: {e}")
@@ -141,17 +144,22 @@ def create_app() -> FastAPI:  # type: ignore
             try:
                 with session_scope() as session:
                     from .auth import hash_password
+
                     demo_plan = os.environ.get("DEMO_PLAN", "free")
-                    demo_user = session.exec(select(User).where(User.email == "demo@example.com")).first()
+                    demo_user = session.exec(
+                        select(User).where(User.email == "demo@example.com")
+                    ).first()
                     if not demo_user:
                         demo_user = User(
                             email="demo@example.com",
                             password_hash=hash_password("demo123"),
-                            role=demo_plan
+                            role=demo_plan,
                         )
                         session.add(demo_user)
                         session.commit()
-                        print(f"✅ Created demo user: demo@example.com / demo123 (plan: {demo_plan})")
+                        print(
+                            f"✅ Created demo user: demo@example.com / demo123 (plan: {demo_plan})"
+                        )
                     else:
                         # Update role if plan changed
                         if demo_user.role != demo_plan:
@@ -167,6 +175,7 @@ def create_app() -> FastAPI:  # type: ignore
             # Setup demo data with sample corrections
             try:
                 from .demo_data import setup_demo_data
+
                 setup_demo_data()
             except Exception as e:
                 print(f"⚠️  Error setting up demo data: {e}")
@@ -182,7 +191,11 @@ def create_app() -> FastAPI:  # type: ignore
                     print(f"📋 Found {len(rows)} queued tasks to rebuild")
                     for rd, run in rows:
                         user = session.get(User, run.submitted_by)
-                        plan = (user.role.value if hasattr(user, "role") else "free") if user else "free"
+                        plan = (
+                            (user.role.value if hasattr(user, "role") else "free")
+                            if user
+                            else "free"
+                        )
                         get_scheduler().register_user(SUser(id=run.submitted_by, plan=plan))
                         job = RunJob(
                             user_id=run.submitted_by,
@@ -190,7 +203,7 @@ def create_app() -> FastAPI:  # type: ignore
                             project_id=run.project_id,
                             documents=[rd.document_id],
                             mode=run.mode.value if hasattr(run.mode, "value") else str(run.mode),
-                            use_ai=rd.use_ai if hasattr(rd, 'use_ai') else False,
+                            use_ai=rd.use_ai if hasattr(rd, "use_ai") else False,
                         )
                         get_scheduler().enqueue_run(job)
             except Exception as e:
@@ -202,10 +215,12 @@ def create_app() -> FastAPI:  # type: ignore
         def _stop_worker():  # pragma: no cover
             print("🛑 Stopping worker...")
             _worker.stop()
+
     except Exception as e:
         # Worker not started if dependencies are missing
         print(f"❌ Worker failed to initialize: {e}")
         import traceback
+
         traceback.print_exc()
 
     return app

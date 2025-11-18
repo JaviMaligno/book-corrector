@@ -8,7 +8,7 @@ import requests
 
 # Set UTF-8 encoding for Windows console
 if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 API_URL = "http://localhost:8001"
 EMAIL = "demo@example.com"

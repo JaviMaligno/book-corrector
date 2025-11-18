@@ -1,7 +1,7 @@
 import time
 from pathlib import Path
 
-log_file = Path('tests/capitulos/capitulo_61.corrections.jsonl')
+log_file = Path("tests/capitulos/capitulo_61.corrections.jsonl")
 prev = 0
 
 print("Monitoreando progreso de corrección...")
@@ -11,7 +11,7 @@ for i in range(12):  # 2 minutos de monitoreo
     if not log_file.exists():
         print(f"{i*10}s: Log no existe aún")
     else:
-        lines = [ln for ln in log_file.read_text(encoding='utf-8').splitlines() if ln.strip()]
+        lines = [ln for ln in log_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
         curr = len(lines)
         status = f"{i*10}s: {curr} correcciones"
         if curr > prev:

@@ -2,6 +2,7 @@
 Database migration script - runs automatically on startup.
 Adds missing columns to existing database.
 """
+
 import logging
 
 from sqlalchemy import text
@@ -18,9 +19,7 @@ def run_migrations():
     with engine.connect() as conn:
         # Migration 1: Add content_backup column to document table
         try:
-            conn.execute(text(
-                "ALTER TABLE document ADD COLUMN IF NOT EXISTS content_backup TEXT"
-            ))
+            conn.execute(text("ALTER TABLE document ADD COLUMN IF NOT EXISTS content_backup TEXT"))
             conn.commit()
             logger.info("✅ Migration: Added content_backup column to document table")
         except Exception as e:

@@ -68,4 +68,3 @@ class BulkUpdateSuggestionsRequest(BaseModel):
 class ExportWithCorrectionsRequest(BaseModel):
     run_id: str
     only_accepted: bool = True  # If True, only apply accepted corrections
-

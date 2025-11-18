@@ -11,6 +11,7 @@ from .text_utils import count_word_tokens, tokenize
 
 try:
     from settings import get_settings
+
     settings = get_settings()
 except ImportError:
     settings = None
@@ -19,27 +20,64 @@ except ImportError:
 def main() -> None:
     # Configurar logging
     import logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(message)s',
-        datefmt='%H:%M:%S'
-    )
 
-    parser = argparse.ArgumentParser(description="Corrector ortográfico/contextual en español (DOCX)")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s", datefmt="%H:%M:%S")
+
+    parser = argparse.ArgumentParser(
+        description="Corrector ortográfico/contextual en español (DOCX)"
+    )
     parser.add_argument("input", help="Ruta del documento DOCX de entrada")
     parser.add_argument("--out", dest="out", help="Ruta de salida DOCX", default=None)
     parser.add_argument("--log", dest="log", help="Ruta del log JSONL", default=None)
-    parser.add_argument("--chunk-words", dest="chunk_words", type=int, default=8000, help="Máximo de palabras por chunk (0 = todo)")
-    parser.add_argument("--overlap-words", dest="overlap_words", type=int, default=800, help="Solape de palabras entre chunks")
-    default_model = settings.gemini_model if settings and settings.gemini_model else "gemini-2.5-flash"
-    parser.add_argument("--model", dest="model_name", default=default_model, help="Modelo Gemini a usar")
-    parser.add_argument("--auto-chunk", action="store_true", help="Dimensionado automático del chunk según ventana de contexto")
+    parser.add_argument(
+        "--chunk-words",
+        dest="chunk_words",
+        type=int,
+        default=8000,
+        help="Máximo de palabras por chunk (0 = todo)",
+    )
+    parser.add_argument(
+        "--overlap-words",
+        dest="overlap_words",
+        type=int,
+        default=800,
+        help="Solape de palabras entre chunks",
+    )
+    default_model = (
+        settings.gemini_model if settings and settings.gemini_model else "gemini-2.5-flash"
+    )
+    parser.add_argument(
+        "--model", dest="model_name", default=default_model, help="Modelo Gemini a usar"
+    )
+    parser.add_argument(
+        "--auto-chunk",
+        action="store_true",
+        help="Dimensionado automático del chunk según ventana de contexto",
+    )
     parser.set_defaults(auto_chunk=True)
-    parser.add_argument("--base-prompt", dest="base_prompt_path", default=None, help="Ruta de base-prompt.md si no está en raíz")
-    parser.add_argument("--local-heuristics", action="store_true", help="Usar corrector local heurístico (sin API)")
-    parser.add_argument("--no-preserve-format", action="store_true", help="No preservar formato DOCX (escritura simple de párrafos)")
-    parser.add_argument("--log-docx", dest="log_docx", default=None, help="Ruta del reporte DOCX del log (por defecto input.corrections.docx)")
-    parser.add_argument("--no-log-docx", action="store_true", help="No generar el reporte DOCX del log")
+    parser.add_argument(
+        "--base-prompt",
+        dest="base_prompt_path",
+        default=None,
+        help="Ruta de base-prompt.md si no está en raíz",
+    )
+    parser.add_argument(
+        "--local-heuristics", action="store_true", help="Usar corrector local heurístico (sin API)"
+    )
+    parser.add_argument(
+        "--no-preserve-format",
+        action="store_true",
+        help="No preservar formato DOCX (escritura simple de párrafos)",
+    )
+    parser.add_argument(
+        "--log-docx",
+        dest="log_docx",
+        default=None,
+        help="Ruta del reporte DOCX del log (por defecto input.corrections.docx)",
+    )
+    parser.add_argument(
+        "--no-log-docx", action="store_true", help="No generar el reporte DOCX del log"
+    )
     args = parser.parse_args()
 
     in_path = Path(args.input)

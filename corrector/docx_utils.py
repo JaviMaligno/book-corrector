@@ -53,7 +53,7 @@ def _read_docx_zip(path: str) -> list[str]:
     root = ET.fromstring(xml)
     for p in root.findall(".//w:p", ns):
         parts: list[str] = []
-        for t in p.findall('.//w:t', ns):
+        for t in p.findall(".//w:t", ns):
             parts.append(t.text or "")
         texts.append("".join(parts))
     return texts
@@ -63,11 +63,11 @@ def _write_minimal_docx(paragraphs: list[str], path: str) -> None:
     # Build a minimal docx package with only document.xml and content types
     document_xml = _build_document_xml(paragraphs)
     content_types = (
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-        "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">"
-        "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>"
-        "<Default Extension=\"xml\" ContentType=\"application/xml\"/>"
-        "<Override PartName=\"/word/document.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml\"/>"
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
         "</Types>"
     )
     with zipfile.ZipFile(path, "w") as zf:
@@ -98,7 +98,9 @@ def write_docx_preserving_runs(input_path: str, paragraphs: list[str], output_pa
     with zipfile.ZipFile(input_path, "r") as zf:
         xml = zf.read("word/document.xml")
         infolist = zf.infolist()
-        files = {i.filename: zf.read(i.filename) for i in infolist if i.filename != "word/document.xml"}
+        files = {
+            i.filename: zf.read(i.filename) for i in infolist if i.filename != "word/document.xml"
+        }
 
     ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
     root = ET.fromstring(xml)
@@ -108,7 +110,7 @@ def write_docx_preserving_runs(input_path: str, paragraphs: list[str], output_pa
         if idx >= len(paragraphs):
             break
         new_text = paragraphs[idx]
-        t_nodes = list(p.findall('.//w:t', ns))
+        t_nodes = list(p.findall(".//w:t", ns))
         if not t_nodes:
             r = ET.SubElement(p, f"{{{ns['w']}}}r")
             t = ET.SubElement(r, f"{{{ns['w']}}}t")

@@ -18,7 +18,7 @@ def list_projects_public():
         "message": "Para ver proyectos necesitas autenticación",
         "auth_required": True,
         "register_endpoint": "/auth/register",
-        "login_endpoint": "/auth/login"
+        "login_endpoint": "/auth/login",
     }
 
 
@@ -86,8 +86,17 @@ def get_project(
     documents = [DocumentInfo(id=d.id, name=d.name, status="ready") for d in docs]
 
     # Get runs for this project
-    runs_db = session.exec(select(Run).where(Run.project_id == project_id).order_by(Run.created_at.desc())).all()
-    runs = [RunInfo(id=r.id, status=r.status.value if hasattr(r.status, 'value') else str(r.status), created_at=r.created_at.isoformat()) for r in runs_db]
+    runs_db = session.exec(
+        select(Run).where(Run.project_id == project_id).order_by(Run.created_at.desc())
+    ).all()
+    runs = [
+        RunInfo(
+            id=r.id,
+            status=r.status.value if hasattr(r.status, "value") else str(r.status),
+            created_at=r.created_at.isoformat(),
+        )
+        for r in runs_db
+    ]
 
     return ProjectDetail(id=p.id, name=p.name, documents=documents, runs=runs)
 
@@ -110,4 +119,3 @@ def update_project(
     session.commit()
     session.refresh(p)
     return p
-

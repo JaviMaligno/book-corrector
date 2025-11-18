@@ -87,7 +87,10 @@ class InMemoryScheduler:
             return False
         # Count runs: if this run is not already active, ensure we have capacity
         run_active = task.run_id in self._active_runs_by_user[task.user_id]
-        if not run_active and len(self._active_runs_by_user[task.user_id]) >= lim.max_runs_concurrent:
+        if (
+            not run_active
+            and len(self._active_runs_by_user[task.user_id]) >= lim.max_runs_concurrent
+        ):
             return False
         return True
 
@@ -120,7 +123,9 @@ class InMemoryScheduler:
     def finish(self, task: DocumentTask) -> None:
         with self._lock:
             self._active_total = max(0, self._active_total - 1)
-            self._active_docs_by_user[task.user_id] = max(0, self._active_docs_by_user[task.user_id] - 1)
+            self._active_docs_by_user[task.user_id] = max(
+                0, self._active_docs_by_user[task.user_id] - 1
+            )
             # If no more tasks for this run are active or queued for the user, free the run slot
             if not any(t.run_id == task.run_id for t in self._queues[task.user_id]):
                 # Check also active docs for this run
@@ -140,4 +145,3 @@ class InMemoryScheduler:
             # Simulate immediate finish for demo purposes
             self.finish(task)
         return dispatched
-

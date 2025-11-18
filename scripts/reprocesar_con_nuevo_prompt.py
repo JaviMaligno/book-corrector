@@ -8,7 +8,7 @@ import requests
 
 # Set UTF-8 encoding for Windows console
 if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 API_URL = "http://localhost:8001"
 EMAIL = "demo@example.com"
@@ -40,10 +40,19 @@ print(f"[OK] Proyecto: {projects[0]['name']} ({project_id})")
 docx_files = sorted(CORRECCIONES_DIR.glob("*.docx"))
 print(f"\n[UPLOAD] Subiendo {len(docx_files)} documentos...")
 files_to_upload = [
-    ("files", (f.name, open(f, "rb"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+    (
+        "files",
+        (
+            f.name,
+            open(f, "rb"),
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ),
+    )
     for f in docx_files
 ]
-resp = requests.post(f"{API_URL}/projects/{project_id}/documents/upload", headers=headers, files=files_to_upload)
+resp = requests.post(
+    f"{API_URL}/projects/{project_id}/documents/upload", headers=headers, files=files_to_upload
+)
 for _, (_, f, _) in files_to_upload:
     f.close()
 resp.raise_for_status()
@@ -57,12 +66,14 @@ print("     ⚡ Usando NUEVO PROMPT con detección de gramática estructural")
 resp = requests.post(
     f"{API_URL}/runs",
     headers=headers,
-    json={"project_id": project_id, "document_ids": document_ids, "use_ai": True}
+    json={"project_id": project_id, "document_ids": document_ids, "use_ai": True},
 )
 resp.raise_for_status()
 run_id = resp.json()["run_id"]
 print(f"[OK] Run creado: {run_id}")
-print(f"     Con rate limiting de 30s entre requests, ~{len(document_ids)*30//60} minutos estimados\n")
+print(
+    f"     Con rate limiting de 30s entre requests, ~{len(document_ids)*30//60} minutos estimados\n"
+)
 
 # 5. Monitorear progreso
 print("[MONITOR] Monitoreando progreso...")
@@ -81,7 +92,9 @@ while True:
         elapsed = int(time.time() - start_time)
         rate = processed / (elapsed / 60) if elapsed > 0 else 0
         remaining = (total - processed) / rate if rate > 0 else 0
-        print(f"   [{processed}/{total}] Status: {status} | Elapsed: {elapsed//60}m{elapsed%60}s | Rate: {rate:.1f} docs/min | ETA: {int(remaining)}min")
+        print(
+            f"   [{processed}/{total}] Status: {status} | Elapsed: {elapsed//60}m{elapsed%60}s | Rate: {rate:.1f} docs/min | ETA: {int(remaining)}min"
+        )
         last_processed = processed
 
     if status == "completed":

@@ -68,7 +68,9 @@ def process_paragraphs(
         FRACTION = 0.7
         char_budget = int(CONTEXT_TOKENS * CHAR_PER_TOKEN_EST * FRACTION)
         overlap_chars = int(char_budget * 0.03)
-        ranges = split_tokens_by_char_budget(tokens, char_budget=char_budget, overlap_chars=overlap_chars)
+        ranges = split_tokens_by_char_budget(
+            tokens, char_budget=char_budget, overlap_chars=overlap_chars
+        )
 
     applied_global: dict[int, CorrectionSpec] = {}
     log_entries: list[LogEntry] = []
@@ -77,10 +79,15 @@ def process_paragraphs(
     for chunk_idx, (start, end) in enumerate(ranges):
         logger.info(f"📄 Procesando chunk {chunk_idx + 1}/{total_chunks} (tokens {start}-{end})...")
         # Local ids start from 0; map back to global by +start
-        local_tokens = [Token(i - start, t.text, t.start, t.end, t.kind, t.line) for i, t in enumerate(tokens[start:end], start=start)]
+        local_tokens = [
+            Token(i - start, t.text, t.start, t.end, t.kind, t.line)
+            for i, t in enumerate(tokens[start:end], start=start)
+        ]
         logger.info(f"🔄 Enviando chunk {chunk_idx + 1}/{total_chunks} al corrector...")
         corrections = corrector.correct_tokens(local_tokens)
-        logger.info(f"✅ Chunk {chunk_idx + 1}/{total_chunks}: {len(corrections)} correcciones encontradas")
+        logger.info(
+            f"✅ Chunk {chunk_idx + 1}/{total_chunks}: {len(corrections)} correcciones encontradas"
+        )
         for c in corrections:
             global_id = start + c.token_id
             if 0 <= global_id < len(tokens):
@@ -97,11 +104,19 @@ def process_paragraphs(
                 # Skip if original is whitespace/punctuation but replacement is a word
                 # (Gemini sometimes gets token IDs wrong)
                 if tok.text.strip() == "" and c.replacement.strip() != "":
-                    logger.warning(f"Skipping invalid correction: whitespace token '{repr(tok.text)}' -> '{c.replacement}'")
+                    logger.warning(
+                        f"Skipping invalid correction: whitespace token '{repr(tok.text)}' -> '{c.replacement}'"
+                    )
                     continue
 
-                if tok.kind in ("space", "newline", "punct") and c.replacement not in (" ", "\n", tok.text):
-                    logger.warning(f"Skipping suspicious correction: {tok.kind} token '{tok.text}' -> '{c.replacement}'")
+                if tok.kind in ("space", "newline", "punct") and c.replacement not in (
+                    " ",
+                    "\n",
+                    tok.text,
+                ):
+                    logger.warning(
+                        f"Skipping suspicious correction: {tok.kind} token '{tok.text}' -> '{c.replacement}'"
+                    )
                     continue
 
                 # Detectar si es una eliminación (replacement vacío o muy diferente)
@@ -109,7 +124,10 @@ def process_paragraphs(
                 reason_text = c.reason
 
                 # Si el replacement parece ser el siguiente token, probablemente es una eliminación
-                if global_id + 1 < len(tokens) and c.replacement.strip() == tokens[global_id + 1].text.strip():
+                if (
+                    global_id + 1 < len(tokens)
+                    and c.replacement.strip() == tokens[global_id + 1].text.strip()
+                ):
                     corrected_text = ""
                     reason_text = f"[ELIMINACIÓN] {c.reason}"
                 elif c.replacement.strip() == "":
@@ -131,7 +149,16 @@ def process_paragraphs(
     # Apply all corrections to the global token list
     if applied_global:
         ordered = [
-            type("Corr", (), {"token_id": k, "replacement": v.replacement, "reason": v.reason, "original": v.original})
+            type(
+                "Corr",
+                (),
+                {
+                    "token_id": k,
+                    "replacement": v.replacement,
+                    "reason": v.reason,
+                    "original": v.original,
+                },
+            )
             for k, v in applied_global.items()
         ]
         tokens = apply_token_corrections(tokens, ordered)
@@ -160,8 +187,8 @@ def process_document(
     # Preserve formatting for DOCX outputs by rewriting document.xml text only
     if (
         preserve_format
-        and output_path.lower().endswith('.docx')
-        and input_path.lower().endswith('.docx')
+        and output_path.lower().endswith(".docx")
+        and input_path.lower().endswith(".docx")
     ):
         write_docx_preserving_runs(input_path, corrected_paragraphs, output_path)
     else:
@@ -211,7 +238,9 @@ def _safe_get(obj, name: str, default=None):
     return default
 
 
-def _write_log_docx(path: str, entries: Iterable[LogEntry], *, source_filename: str | None = None) -> None:
+def _write_log_docx(
+    path: str, entries: Iterable[LogEntry], *, source_filename: str | None = None
+) -> None:
     entries_list = list(entries)
     if Document is not None:
         from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -241,7 +270,7 @@ def _write_log_docx(path: str, entries: Iterable[LogEntry], *, source_filename: 
 
         # Crear tabla con estilo
         table = doc.add_table(rows=1, cols=5)
-        table.style = 'Light Grid Accent 1'
+        table.style = "Light Grid Accent 1"
 
         # Encabezados
         hdr_cells = table.rows[0].cells
@@ -256,8 +285,8 @@ def _write_log_docx(path: str, entries: Iterable[LogEntry], *, source_filename: 
                     run.font.size = Pt(11)
                     run.font.color.rgb = RGBColor(255, 255, 255)
             # Color de fondo del encabezado
-            shading_elm = OxmlElement('w:shd')
-            shading_elm.set(qn('w:fill'), '4472C4')
+            shading_elm = OxmlElement("w:shd")
+            shading_elm.set(qn("w:fill"), "4472C4")
             hdr_cells[i]._element.get_or_add_tcPr().append(shading_elm)
 
         # Ajustar anchos de columna
@@ -321,10 +350,10 @@ def _write_log_docx(path: str, entries: Iterable[LogEntry], *, source_filename: 
         paras.append(f"Original: {_safe_get(e,'original','')}")
         paras.append(f"Corregido: {_safe_get(e,'corrected','')}")
         paras.append(f"Motivo: {_safe_get(e,'reason','')}")
-        ctx = str(_safe_get(e, 'context', ''))
+        ctx = str(_safe_get(e, "context", ""))
         if ctx:
             paras.append(f"Contexto: {ctx}")
-        sent = str(_safe_get(e, 'sentence', ''))
+        sent = str(_safe_get(e, "sentence", ""))
         if sent:
             paras.append(f"Frase: {sent}")
         paras.append("")

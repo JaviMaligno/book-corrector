@@ -33,4 +33,3 @@ PREMIUM = PlanLimits(
 
 # System-wide default workers for local single-node deployment
 SYSTEM_MAX_WORKERS = 2
-

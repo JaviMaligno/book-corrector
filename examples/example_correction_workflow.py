@@ -22,10 +22,7 @@ API_BASE = "http://localhost:8000"
 
 def login(email: str, password: str) -> str:
     """Login and get access token."""
-    response = requests.post(
-        f"{API_BASE}/auth/login",
-        json={"email": email, "password": password}
-    )
+    response = requests.post(f"{API_BASE}/auth/login", json={"email": email, "password": password})
     response.raise_for_status()
     return response.json()["access_token"]
 
@@ -49,7 +46,7 @@ def accept_suggestion(token: str, suggestion_id: str) -> dict:
     response = requests.patch(
         f"{API_BASE}/suggestions/suggestions/{suggestion_id}",
         headers=get_headers(token),
-        json={"status": "accepted"}
+        json={"status": "accepted"},
     )
     response.raise_for_status()
     return response.json()
@@ -60,7 +57,7 @@ def reject_suggestion(token: str, suggestion_id: str) -> dict:
     response = requests.patch(
         f"{API_BASE}/suggestions/suggestions/{suggestion_id}",
         headers=get_headers(token),
-        json={"status": "rejected"}
+        json={"status": "rejected"},
     )
     response.raise_for_status()
     return response.json()
@@ -71,7 +68,7 @@ def bulk_accept(token: str, run_id: str, suggestion_ids: list[str]) -> dict:
     response = requests.post(
         f"{API_BASE}/suggestions/runs/{run_id}/suggestions/bulk-update",
         headers=get_headers(token),
-        json={"suggestion_ids": suggestion_ids, "status": "accepted"}
+        json={"suggestion_ids": suggestion_ids, "status": "accepted"},
     )
     response.raise_for_status()
     return response.json()
@@ -82,7 +79,7 @@ def bulk_reject(token: str, run_id: str, suggestion_ids: list[str]) -> dict:
     response = requests.post(
         f"{API_BASE}/suggestions/runs/{run_id}/suggestions/bulk-update",
         headers=get_headers(token),
-        json={"suggestion_ids": suggestion_ids, "status": "rejected"}
+        json={"suggestion_ids": suggestion_ids, "status": "rejected"},
     )
     response.raise_for_status()
     return response.json()
@@ -91,8 +88,7 @@ def bulk_reject(token: str, run_id: str, suggestion_ids: list[str]) -> dict:
 def accept_all(token: str, run_id: str) -> dict:
     """Accept all pending suggestions."""
     response = requests.post(
-        f"{API_BASE}/suggestions/runs/{run_id}/suggestions/accept-all",
-        headers=get_headers(token)
+        f"{API_BASE}/suggestions/runs/{run_id}/suggestions/accept-all", headers=get_headers(token)
     )
     response.raise_for_status()
     return response.json()
@@ -101,8 +97,7 @@ def accept_all(token: str, run_id: str) -> dict:
 def reject_all(token: str, run_id: str) -> dict:
     """Reject all pending suggestions."""
     response = requests.post(
-        f"{API_BASE}/suggestions/runs/{run_id}/suggestions/reject-all",
-        headers=get_headers(token)
+        f"{API_BASE}/suggestions/runs/{run_id}/suggestions/reject-all", headers=get_headers(token)
     )
     response.raise_for_status()
     return response.json()
@@ -113,7 +108,7 @@ def export_with_accepted(token: str, run_id: str, output_path: str):
     response = requests.post(
         f"{API_BASE}/suggestions/runs/{run_id}/export-with-accepted",
         headers=get_headers(token),
-        stream=True
+        stream=True,
     )
     response.raise_for_status()
 
@@ -212,7 +207,7 @@ if __name__ == "__main__":
         main()
     except requests.exceptions.RequestException as e:
         print(f"\nError: {e}")
-        if hasattr(e.response, 'text'):
+        if hasattr(e.response, "text"):
             print(f"Response: {e.response.text}")
     except KeyError as e:
         print(f"\nConfiguration error: {e}")

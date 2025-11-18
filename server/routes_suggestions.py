@@ -1,4 +1,5 @@
 """API endpoints for managing correction suggestions."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -288,12 +289,13 @@ def export_document_with_accepted_corrections(
 
     # Save corrected document (create new document for clarity)
     from corrector.docx_utils import write_paragraphs
+
     write_paragraphs(corrected_paragraphs, str(output_path))
 
     # Read the file and return as Response (better CORS support than FileResponse)
     with open(output_path, "rb") as f:
         content = f.read()
-    
+
     return Response(
         content=content,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

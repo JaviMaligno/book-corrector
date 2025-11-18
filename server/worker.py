@@ -100,7 +100,7 @@ class Worker:
             # Extraer valores antes de salir de la sesión
             doc_path = doc.path
             doc_name = doc.name
-            use_ai = run_doc.use_ai if hasattr(run_doc, 'use_ai') else False
+            use_ai = run_doc.use_ai if hasattr(run_doc, "use_ai") else False
 
             # status/lock were set in _try_lock_task
             session.add(run_doc)
@@ -143,6 +143,7 @@ class Worker:
         if use_ai:
             from corrector.llm import LLMNotConfigured
             from corrector.model import GeminiCorrector
+
             try:
                 corrector = GeminiCorrector()
                 logger.info("✅ Using Gemini AI corrector for document: %s", doc_name)
@@ -165,8 +166,10 @@ class Worker:
             )
 
             # Save corrected document
-            if input_path.suffix.lower() == '.docx':
-                write_docx_preserving_runs(str(input_path), corrected_paragraphs, str(corrected_path))
+            if input_path.suffix.lower() == ".docx":
+                write_docx_preserving_runs(
+                    str(input_path), corrected_paragraphs, str(corrected_path)
+                )
             else:
                 write_paragraphs(corrected_paragraphs, str(corrected_path))
 
@@ -195,23 +198,38 @@ class Worker:
                 with session_scope() as session:
                     session.add_all(
                         [
-                            Export(run_id=task.run_id, kind=ExportKind.docx, path=str(corrected_path)),
-                            Export(run_id=task.run_id, kind=ExportKind.jsonl, path=str(log_jsonl_path)),
-                            Export(run_id=task.run_id, kind=ExportKind.docx, path=str(log_docx_path)),
-                            Export(run_id=task.run_id, kind=ExportKind.csv, path=str(changelog_csv_path)),
-                            Export(run_id=task.run_id, kind=ExportKind.md, path=str(summary_md_path)),
+                            Export(
+                                run_id=task.run_id, kind=ExportKind.docx, path=str(corrected_path)
+                            ),
+                            Export(
+                                run_id=task.run_id, kind=ExportKind.jsonl, path=str(log_jsonl_path)
+                            ),
+                            Export(
+                                run_id=task.run_id, kind=ExportKind.docx, path=str(log_docx_path)
+                            ),
+                            Export(
+                                run_id=task.run_id,
+                                kind=ExportKind.csv,
+                                path=str(changelog_csv_path),
+                            ),
+                            Export(
+                                run_id=task.run_id, kind=ExportKind.md, path=str(summary_md_path)
+                            ),
                         ]
                     )
                     rd = session.exec(
                         select(RunDocument).where(
-                            RunDocument.run_id == task.run_id, RunDocument.document_id == task.document_id
+                            RunDocument.run_id == task.run_id,
+                            RunDocument.document_id == task.document_id,
                         )
                     ).first()
                     if rd:
                         rd.status = RunDocumentStatus.completed
                         session.add(rd)
                     # Update run status if all docs done
-                    rdocs = session.exec(select(RunDocument).where(RunDocument.run_id == task.run_id)).all()
+                    rdocs = session.exec(
+                        select(RunDocument).where(RunDocument.run_id == task.run_id)
+                    ).all()
                     if rdocs and all(r.status == RunDocumentStatus.completed for r in rdocs):
                         r = session.get(Run, task.run_id)
                         if r:
@@ -337,7 +355,10 @@ class Worker:
                     suggestion_type = SuggestionType.concordancia
                 elif any(kw in reason_lower for kw in ["estilo", "style"]):
                     suggestion_type = SuggestionType.estilo
-                elif any(kw in reason_lower for kw in ["léxico", "lexico", "lexical", "confusión", "confusion"]):
+                elif any(
+                    kw in reason_lower
+                    for kw in ["léxico", "lexico", "lexical", "confusión", "confusion"]
+                ):
                     suggestion_type = SuggestionType.lexico
 
                 # Default severity
@@ -388,7 +409,9 @@ class Worker:
                     + "\n"
                 )
 
-    def _write_log_docx(self, path: Path, entries: list[LogEntry], source_filename: str | None = None) -> None:
+    def _write_log_docx(
+        self, path: Path, entries: list[LogEntry], source_filename: str | None = None
+    ) -> None:
         """Write log entries to formatted DOCX file."""
         # Import the existing function from engine
         from corrector.engine import _write_log_docx as engine_write_log_docx
