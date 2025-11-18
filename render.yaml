@@ -21,10 +21,10 @@ services:
         sync: false  # Set manually in Render dashboard (secret)
 
       - key: GEMINI_MODEL
-        value: gemini-3-pro-preview
+        value: gemini-2.5-pro
 
       - key: GEMINI_FALLBACK_MODEL
-        value: gemini-2.5-pro
+        value: gemini-2.5-flash
 
       - key: DATABASE_URL
         fromDatabase:
