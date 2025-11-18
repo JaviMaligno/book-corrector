@@ -23,7 +23,7 @@ dependencies = [
 corrector = "corrector.cli:main"
 
 [tool.setuptools]
-packages = ["corrector"]
+packages = ["corrector", "server"]
 
 [dependency-groups]
 dev = [
