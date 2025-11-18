@@ -3,7 +3,9 @@ Database migration script - runs automatically on startup.
 Adds missing columns to existing database.
 """
 import logging
+
 from sqlalchemy import text
+
 from .db import engine
 
 logger = logging.getLogger(__name__)

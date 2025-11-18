@@ -1,26 +1,24 @@
 import os
-from functools import lru_cache
-from typing import Optional
 
-from pydantic import BaseModel
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 
 class Settings(BaseModel):
-    llm_provider: Optional[str] = None
-    llm_api_key: Optional[str] = None
-    model_name: Optional[str] = None
-    google_api_key: Optional[str] = None
-    gemini_model: Optional[str] = None
+    llm_provider: str | None = None
+    llm_api_key: str | None = None
+    model_name: str | None = None
+    google_api_key: str | None = None
+    gemini_model: str | None = None
 
     # Azure OpenAI settings
-    azure_openai_endpoint: Optional[str] = None
-    azure_openai_api_key: Optional[str] = None
-    azure_openai_deployment_name: Optional[str] = None
-    azure_openai_api_version: Optional[str] = None
-    azure_openai_model_name: Optional[str] = None
-    azure_openai_fallback_deployment_name: Optional[str] = None
-    azure_openai_fallback_api_version: Optional[str] = None
+    azure_openai_endpoint: str | None = None
+    azure_openai_api_key: str | None = None
+    azure_openai_deployment_name: str | None = None
+    azure_openai_api_version: str | None = None
+    azure_openai_model_name: str | None = None
+    azure_openai_fallback_deployment_name: str | None = None
+    azure_openai_fallback_api_version: str | None = None
 
 def get_settings() -> Settings:
     # Cargar variables desde .env si existe

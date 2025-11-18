@@ -1,8 +1,6 @@
 
-from pathlib import Path
 import re
-
-import types
+from pathlib import Path
 
 from corrector.engine import process_document
 from corrector.model import GeminiCorrector
@@ -77,7 +75,7 @@ def test_gemini_corrector_with_tools_preserves_proper_names(monkeypatch, tmp_pat
     ]
 
     # write minimal docx via fallback
-    from corrector.docx_utils import write_paragraphs, read_paragraphs
+    from corrector.docx_utils import read_paragraphs, write_paragraphs
     write_paragraphs(paragraphs, str(input_doc))
 
     out_doc = tmp_path / "salida.docx"

@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Monitor batch run and extract corrections when complete"""
-import os
 import sys
-import requests
 import time
 from pathlib import Path
+
+import requests
 
 # Set UTF-8 encoding for Windows console
 if sys.platform == "win32":
@@ -47,7 +46,7 @@ while True:
     time.sleep(10)
 
 # 3. Download corrections
-print(f"\n[DOWNLOAD] Descargando archivos de correcciones...")
+print("\n[DOWNLOAD] Descargando archivos de correcciones...")
 resp = requests.get(f"{API_URL}/runs/{RUN_ID}/exports", headers=headers)
 resp.raise_for_status()
 exports = resp.json()
@@ -68,7 +67,7 @@ for export in corrections_files:
     with open(output_path, "wb") as f:
         f.write(resp.content)
 
-    print(f"[OK]")
+    print("[OK]")
 
 print(f"\n[DONE] Completado! Archivos guardados en: {OUTPUT_DIR.absolute()}")
 print(f"   Total de archivos: {len(list(OUTPUT_DIR.glob('*.docx')))}")

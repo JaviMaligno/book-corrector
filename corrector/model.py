@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import json
-import time
 import logging
-from typing import List, Protocol, Any, Dict
+import time
+from typing import Any, Protocol
 
 from pydantic import BaseModel
 
-from .llm import get_gemini_client, LLMNotConfigured
-from .text_utils import Token
+from .llm import LLMNotConfigured, get_gemini_client
 from .prompt import build_json_prompt
+from .text_utils import Token
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +22,12 @@ class CorrectionSpec(BaseModel):
 
 
 class BaseCorrector(Protocol):
-    def correct_tokens(self, tokens: List[Token]) -> List[CorrectionSpec]:
+    def correct_tokens(self, tokens: list[Token]) -> list[CorrectionSpec]:
         ...
 
 
 class CorrectionsResponse(BaseModel):
-    corrections: List[CorrectionSpec] = []
+    corrections: list[CorrectionSpec] = []
 
 
 class GeminiCorrector:
@@ -59,7 +59,7 @@ class GeminiCorrector:
         if self._client is None:
             self._client = get_gemini_client()
 
-    def correct_tokens(self, tokens: List[Token]) -> List[CorrectionSpec]:
+    def correct_tokens(self, tokens: list[Token]) -> list[CorrectionSpec]:
         self._ensure_client()
         prompt = build_json_prompt(self.base_prompt_text, tokens)
 
@@ -153,7 +153,7 @@ class GeminiCorrector:
                             azure_corrector = AzureOpenAICorrector(base_prompt_text=self.base_prompt_text)
                             result = azure_corrector.correct_tokens(tokens)
                             if result:
-                                logger.info(f"✅ Fallback to Azure OpenAI GPT-5 succeeded")
+                                logger.info("✅ Fallback to Azure OpenAI GPT-5 succeeded")
                                 return result
                     except Exception as azure_error:
                         logger.warning(f"⚠️  Azure OpenAI fallback failed: {azure_error}, trying gemini-2.5-flash")
@@ -177,7 +177,7 @@ class GeminiCorrector:
                             data = json.loads(text)
                             items = data.get("corrections") if isinstance(data, dict) else data
                             if isinstance(items, list):
-                                logger.info(f"✅ Fallback to gemini-2.5-flash succeeded")
+                                logger.info("✅ Fallback to gemini-2.5-flash succeeded")
                                 return [CorrectionSpec(**it) for it in items]
                     except Exception as fallback_error:
                         logger.error(f"❌ All fallbacks failed: {fallback_error}")
@@ -201,6 +201,7 @@ class AzureOpenAICorrector:
         if self._client is None:
             try:
                 from openai import AzureOpenAI
+
                 from settings import get_settings
                 settings = get_settings()
 
@@ -214,10 +215,10 @@ class AzureOpenAICorrector:
                 )
                 self.deployment_name = settings.azure_openai_deployment_name or "gpt-5"
 
-            except ImportError:
-                raise LLMNotConfigured("openai package not installed")
+            except ImportError as err:
+                raise LLMNotConfigured("openai package not installed") from err
 
-    def correct_tokens(self, tokens: List[Token]) -> List[CorrectionSpec]:
+    def correct_tokens(self, tokens: list[Token]) -> list[CorrectionSpec]:
         self._ensure_client()
         # Use sanitized prompt for Azure to avoid content filter
         prompt = build_json_prompt(self.base_prompt_text, tokens, sanitize_for_azure=True)
@@ -261,7 +262,7 @@ class AzureOpenAICorrector:
                 is_content_filter = "content_filter" in error_msg or "ResponsibleAIPolicyViolation" in error_msg
 
                 if is_content_filter:
-                    logger.warning(f"⚠️  Azure GPT-5 content filter triggered, trying GPT-4.1 fallback")
+                    logger.warning("⚠️  Azure GPT-5 content filter triggered, trying GPT-4.1 fallback")
                     # Try GPT-4.1 as fallback
                     try:
                         from settings import get_settings
@@ -294,13 +295,13 @@ class AzureOpenAICorrector:
                                 data = json.loads(text)
                                 items = data.get("corrections") if isinstance(data, dict) else data
                                 if isinstance(items, list):
-                                    logger.info(f"✅ Azure GPT-4.1 fallback succeeded")
+                                    logger.info("✅ Azure GPT-4.1 fallback succeeded")
                                     return [CorrectionSpec(**it) for it in items]
                     except Exception as fallback_error:
                         logger.warning(f"⚠️  Azure GPT-4.1 fallback also failed: {fallback_error}")
 
                     # If GPT-4.1-mini also failed, return empty to trigger Flash fallback
-                    logger.warning(f"⚠️  All Azure models failed, falling back to Gemini Flash")
+                    logger.warning("⚠️  All Azure models failed, falling back to Gemini Flash")
                     return []  # Return empty to trigger Flash fallback in caller
 
                 logger.warning(f"Azure OpenAI error (attempt {attempt + 1}/{max_retries}): {error_msg}")
@@ -325,9 +326,9 @@ class HeuristicCorrector:
     - corrige "ojear"->"hojear" si contexto contiene libro/revista
     """
 
-    def correct_tokens(self, tokens: List[Token]) -> List[CorrectionSpec]:
+    def correct_tokens(self, tokens: list[Token]) -> list[CorrectionSpec]:
         text_lower = [t.text.lower() for t in tokens]
-        results: List[CorrectionSpec] = []
+        results: list[CorrectionSpec] = []
         for i, t in enumerate(tokens):
             if t.kind != "word":
                 continue
@@ -366,7 +367,7 @@ def _preserve_case(original: str, replacement: str) -> str:
 
 def _build_tools_from_pydantic(function_name: str, model: type[BaseModel]) -> list[dict[str, Any]]:
     """Build Gemini 'tools' function_declarations from a Pydantic model schema."""
-    schema: Dict[str, Any] = model.model_json_schema()
+    schema: dict[str, Any] = model.model_json_schema()
     # Ensure top-level is an object; Gemini expects JSON Schema draft
     if schema.get("type") != "object":
         schema = {"type": "object", "properties": {"value": schema}, "required": ["value"]}
@@ -382,7 +383,7 @@ def _build_tools_from_pydantic(function_name: str, model: type[BaseModel]) -> li
     ]
 
 
-def _extract_function_call(resp: Any, name: str) -> Dict[str, Any] | None:
+def _extract_function_call(resp: Any, name: str) -> dict[str, Any] | None:
     """Extract function call arguments from a Gemini Responses object."""
     try:
         cands = getattr(resp, "candidates", None)

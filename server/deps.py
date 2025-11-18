@@ -8,7 +8,6 @@ from .auth import verify_token
 from .db import get_session
 from .models import User
 
-
 auth_scheme = HTTPBearer(auto_error=False)
 
 

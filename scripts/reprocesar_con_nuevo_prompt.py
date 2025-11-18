@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Script para reprocesar todos los documentos con el nuevo prompt mejorado"""
-import os
 import sys
-import requests
 import time
 from pathlib import Path
+
+import requests
 
 # Set UTF-8 encoding for Windows console
 if sys.platform == "win32":
@@ -54,7 +53,7 @@ print(f"[OK] Subidos {len(document_ids)} documentos\n")
 
 # 4. Crear run con todos los documentos
 print(f"[RUN] Creando run con {len(document_ids)} documentos...")
-print(f"     ⚡ Usando NUEVO PROMPT con detección de gramática estructural")
+print("     ⚡ Usando NUEVO PROMPT con detección de gramática estructural")
 resp = requests.post(
     f"{API_URL}/runs",
     headers=headers,
@@ -97,7 +96,7 @@ while True:
     time.sleep(10)
 
 # 6. Descargar correcciones
-print(f"\n[DOWNLOAD] Descargando archivos de correcciones...")
+print("\n[DOWNLOAD] Descargando archivos de correcciones...")
 resp = requests.get(f"{API_URL}/runs/{run_id}/exports", headers=headers)
 resp.raise_for_status()
 exports = resp.json()
@@ -118,16 +117,16 @@ for export in corrections_files:
     with open(output_path, "wb") as f:
         f.write(resp.content)
 
-    print(f"[OK]")
+    print("[OK]")
 
 print(f"\n{'=' * 80}")
-print(f"[DONE] ✅ Completado con NUEVO PROMPT!")
+print("[DONE] ✅ Completado con NUEVO PROMPT!")
 print(f"{'=' * 80}")
 print(f"   Archivos guardados en: {OUTPUT_DIR.absolute()}")
 print(f"   Total de archivos: {len(list(OUTPUT_DIR.glob('*.docx')))}")
-print(f"\n💡 Mejoras del nuevo prompt:")
-print(f"   • Detección de concordancia (número/género)")
-print(f"   • Tiempos verbales incorrectos")
-print(f"   • Preposiciones incorrectas")
-print(f"   • Construcciones idiomáticas")
-print(f"   • Mezcla de personas gramaticales")
+print("\n💡 Mejoras del nuevo prompt:")
+print("   • Detección de concordancia (número/género)")
+print("   • Tiempos verbales incorrectos")
+print("   • Preposiciones incorrectas")
+print("   • Construcciones idiomáticas")
+print("   • Mezcla de personas gramaticales")

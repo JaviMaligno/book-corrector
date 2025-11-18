@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import itertools
 import threading
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Deque, Dict, Iterable, List, Optional
 
-from .limits import PlanLimits, FREE, PREMIUM, SYSTEM_MAX_WORKERS
+from .limits import FREE, PREMIUM, SYSTEM_MAX_WORKERS, PlanLimits
 
 
 @dataclass
@@ -35,7 +33,7 @@ class RunJob:
     user_id: str
     run_id: str
     project_id: str
-    documents: List[str]
+    documents: list[str]
     mode: str
     use_ai: bool = False
 
@@ -50,13 +48,13 @@ class InMemoryScheduler:
     """
 
     def __init__(self, system_max_workers: int = SYSTEM_MAX_WORKERS) -> None:
-        self._queues: Dict[str, Deque[DocumentTask]] = defaultdict(deque)
-        self._active_docs_by_user: Dict[str, int] = defaultdict(int)
-        self._active_runs_by_user: Dict[str, set[str]] = defaultdict(set)
+        self._queues: dict[str, deque[DocumentTask]] = defaultdict(deque)
+        self._active_docs_by_user: dict[str, int] = defaultdict(int)
+        self._active_runs_by_user: dict[str, set[str]] = defaultdict(set)
         self._active_total = 0
         self._lock = threading.Lock()
         self._system_max_workers = system_max_workers
-        self._users: Dict[str, User] = {}
+        self._users: dict[str, User] = {}
 
     def register_user(self, user: User) -> None:
         self._users[user.id] = user
@@ -93,7 +91,7 @@ class InMemoryScheduler:
             return False
         return True
 
-    def try_dispatch(self) -> Optional[DocumentTask]:
+    def try_dispatch(self) -> DocumentTask | None:
         """Pick the next runnable DocumentTask based on fair-share.
 
         Returns a task and marks slots as used. Caller must call `finish(task)` when done.
@@ -132,8 +130,8 @@ class InMemoryScheduler:
                     self._active_runs_by_user[task.user_id].discard(task.run_id)
 
     # Helper to drain tasks for testing/demo
-    def drain(self) -> List[DocumentTask]:
-        dispatched: List[DocumentTask] = []
+    def drain(self) -> list[DocumentTask]:
+        dispatched: list[DocumentTask] = []
         while True:
             task = self.try_dispatch()
             if not task:

@@ -1,7 +1,6 @@
 """Script para diagnosticar el problema de corrección de Gemini con logs detallados."""
-from pathlib import Path
-import json
 import sys
+from pathlib import Path
 
 # Configurar UTF-8 en Windows
 if sys.platform == 'win32':
@@ -9,9 +8,9 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-from corrector.model import GeminiCorrector
-from corrector.prompt import load_base_prompt, build_json_prompt
 from corrector.docx_utils import read_paragraphs
+from corrector.model import GeminiCorrector
+from corrector.prompt import build_json_prompt, load_base_prompt
 from corrector.text_utils import tokenize
 
 # Leer el archivo de entrada

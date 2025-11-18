@@ -2,22 +2,22 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Sequence
 
-from .docx_utils import read_paragraphs, write_paragraphs, write_docx_preserving_runs
+from .docx_utils import read_paragraphs, write_docx_preserving_runs, write_paragraphs
+from .model import BaseCorrector, CorrectionSpec
 from .text_utils import (
     Token,
     apply_token_corrections,
     build_context,
     build_sentence_context,
     detokenize,
-    split_tokens_in_chunks,
     split_tokens_by_char_budget,
+    split_tokens_in_chunks,
     tokenize,
 )
-from .model import BaseCorrector, CorrectionSpec
 
 logger = logging.getLogger(__name__)
 try:  # optional rich formatting for DOCX log
@@ -42,7 +42,7 @@ def paragraphs_to_text(paragraphs: Sequence[str]) -> str:
     return "\n".join(paragraphs)
 
 
-def text_to_paragraphs(text: str) -> List[str]:
+def text_to_paragraphs(text: str) -> list[str]:
     return text.split("\n")
 
 
@@ -52,7 +52,7 @@ def process_paragraphs(
     *,
     chunk_words: int = 0,
     overlap_words: int = 0,
-) -> tuple[List[str], List[LogEntry]]:
+) -> tuple[list[str], list[LogEntry]]:
     # Tokenize full document text to create stable global token ids
     full_text = paragraphs_to_text(paragraphs)
     tokens = tokenize(full_text)
@@ -71,12 +71,11 @@ def process_paragraphs(
         ranges = split_tokens_by_char_budget(tokens, char_budget=char_budget, overlap_chars=overlap_chars)
 
     applied_global: dict[int, CorrectionSpec] = {}
-    log_entries: List[LogEntry] = []
+    log_entries: list[LogEntry] = []
     total_chunks = len(ranges)
     logger.info(f"Procesando documento en {total_chunks} chunk(s)...")
     for chunk_idx, (start, end) in enumerate(ranges):
         logger.info(f"📄 Procesando chunk {chunk_idx + 1}/{total_chunks} (tokens {start}-{end})...")
-        slice_tokens = [Token(i - start, t.text, t.start, t.end, t.kind, t.line) for i, t in enumerate(tokens[start:end], start=start)]
         # Local ids start from 0; map back to global by +start
         local_tokens = [Token(i - start, t.text, t.start, t.end, t.kind, t.line) for i, t in enumerate(tokens[start:end], start=start)]
         logger.info(f"🔄 Enviando chunk {chunk_idx + 1}/{total_chunks} al corrector...")
@@ -215,10 +214,10 @@ def _safe_get(obj, name: str, default=None):
 def _write_log_docx(path: str, entries: Iterable[LogEntry], *, source_filename: str | None = None) -> None:
     entries_list = list(entries)
     if Document is not None:
-        from docx.shared import Pt, RGBColor, Inches
         from docx.enum.text import WD_ALIGN_PARAGRAPH
-        from docx.oxml.ns import qn
         from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+        from docx.shared import Inches, Pt, RGBColor
 
         doc = Document()  # type: ignore
 

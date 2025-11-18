@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import List
 import zipfile
 from xml.etree import ElementTree as ET
 
@@ -10,7 +9,7 @@ except Exception:  # pragma: no cover - optional
     Document = None  # type: ignore
 
 
-def read_paragraphs(path: str) -> List[str]:
+def read_paragraphs(path: str) -> list[str]:
     if Document is not None and path.lower().endswith(".docx"):
         try:
             doc = Document(path)  # type: ignore
@@ -18,13 +17,13 @@ def read_paragraphs(path: str) -> List[str]:
         except Exception:
             pass
     if path.lower().endswith(".txt"):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return [line.rstrip("\n") for line in f]
     # Fallback: minimal DOCX parse via zip + XML
     return _read_docx_zip(path)
 
 
-def write_paragraphs(paragraphs: List[str], path: str) -> None:
+def write_paragraphs(paragraphs: list[str], path: str) -> None:
     if Document is not None and path.lower().endswith(".docx"):
         try:
             doc = Document()  # type: ignore
@@ -42,8 +41,8 @@ def write_paragraphs(paragraphs: List[str], path: str) -> None:
     _write_minimal_docx(paragraphs, path)
 
 
-def _read_docx_zip(path: str) -> List[str]:
-    texts: List[str] = []
+def _read_docx_zip(path: str) -> list[str]:
+    texts: list[str] = []
     with zipfile.ZipFile(path) as zf:
         with zf.open("word/document.xml") as f:
             xml = f.read()
@@ -53,14 +52,14 @@ def _read_docx_zip(path: str) -> List[str]:
     }
     root = ET.fromstring(xml)
     for p in root.findall(".//w:p", ns):
-        parts: List[str] = []
+        parts: list[str] = []
         for t in p.findall('.//w:t', ns):
             parts.append(t.text or "")
         texts.append("".join(parts))
     return texts
 
 
-def _write_minimal_docx(paragraphs: List[str], path: str) -> None:
+def _write_minimal_docx(paragraphs: list[str], path: str) -> None:
     # Build a minimal docx package with only document.xml and content types
     document_xml = _build_document_xml(paragraphs)
     content_types = (
@@ -76,7 +75,7 @@ def _write_minimal_docx(paragraphs: List[str], path: str) -> None:
         zf.writestr("word/document.xml", document_xml)
 
 
-def _build_document_xml(paragraphs: List[str]) -> str:
+def _build_document_xml(paragraphs: list[str]) -> str:
     ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
     ET.register_namespace("w", ns)
     root = ET.Element(f"{{{ns}}}document")
@@ -89,7 +88,7 @@ def _build_document_xml(paragraphs: List[str]) -> str:
     return ET.tostring(root, encoding="utf-8", xml_declaration=True).decode("utf-8")
 
 
-def write_docx_preserving_runs(input_path: str, paragraphs: List[str], output_path: str) -> None:
+def write_docx_preserving_runs(input_path: str, paragraphs: list[str], output_path: str) -> None:
     """Rewrite document.xml text while preserving run structure and formatting.
 
     It copies the original .docx package and only replaces the text content in w:t nodes

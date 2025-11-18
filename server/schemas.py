@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -16,14 +14,14 @@ class MeLimits(BaseModel):
 
 class CreateRunRequest(BaseModel):
     project_id: str
-    documents: List[str] = Field(default_factory=list)
+    documents: list[str] = Field(default_factory=list)
     mode: str = Field(default="rapido", pattern="^(rapido|profesional)$")
     use_ai: bool = False
 
 
 class CreateRunResponse(BaseModel):
     run_id: str
-    accepted_documents: List[str]
+    accepted_documents: list[str]
     queued: int
 
 
@@ -46,16 +44,16 @@ class SuggestionResponse(BaseModel):
     after: str
     reason: str
     source: str
-    confidence: Optional[float] = None
-    context: Optional[str] = None
-    sentence: Optional[str] = None
+    confidence: float | None = None
+    context: str | None = None
+    sentence: str | None = None
     status: str
 
 
 class SuggestionsListResponse(BaseModel):
     run_id: str
     total: int
-    suggestions: List[SuggestionResponse]
+    suggestions: list[SuggestionResponse]
 
 
 class UpdateSuggestionStatusRequest(BaseModel):
@@ -63,7 +61,7 @@ class UpdateSuggestionStatusRequest(BaseModel):
 
 
 class BulkUpdateSuggestionsRequest(BaseModel):
-    suggestion_ids: List[str]
+    suggestion_ids: list[str]
     status: str = Field(pattern="^(accepted|rejected)$")
 
 

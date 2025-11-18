@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import os
 import logging
-from typing import Dict
+import os
 
 try:
     from fastapi import FastAPI, HTTPException
@@ -23,19 +22,19 @@ logging.basicConfig(
 )
 
 from .db import init_db, session_scope
-from .limits import FREE, PREMIUM, SYSTEM_MAX_WORKERS
-from .schemas import MeLimits
+from .limits import FREE, PREMIUM
+from .models import Run, RunDocument, RunDocumentStatus, User
 from .routes_auth import router as auth_router
+from .routes_documents import router as documents_router
 from .routes_projects import router as projects_router
 from .routes_runs import router as runs_router
-from .routes_documents import router as documents_router
 from .routes_suggestions import router as suggestions_router
-from .models import RunDocument, Run, User, RunDocumentStatus, Suggestion
-from .scheduler_registry import get_scheduler
 from .scheduler import RunJob, User as SUser
+from .scheduler_registry import get_scheduler
+from .schemas import MeLimits
 
 
-def create_app() -> "FastAPI":  # type: ignore
+def create_app() -> FastAPI:  # type: ignore
     if FastAPI is None:
         raise RuntimeError("FastAPI is not installed. Please `pip install fastapi uvicorn`.\n" )
     app = FastAPI(title="Corrector Backend", version="0.1")
@@ -98,9 +97,10 @@ def create_app() -> "FastAPI":  # type: ignore
     @app.get("/artifacts/{run_id}/{filename}")
     def download_artifact(run_id: str, filename: str):
         from fastapi.responses import FileResponse
-        from .models import Export
-        from .db import engine
         from sqlmodel import Session
+
+        from .db import engine
+        from .models import Export
 
         with Session(engine) as session:
             exps = session.exec(select(Export).where(Export.run_id == run_id)).all()

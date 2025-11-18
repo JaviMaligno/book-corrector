@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence, Tuple
 
 
 @dataclass
@@ -15,8 +15,8 @@ class Token:
     line: int  # 1-based logical line number computed from newlines
 
 
-def tokenize(text: str) -> List[Token]:
-    tokens: List[Token] = []
+def tokenize(text: str) -> list[Token]:
+    tokens: list[Token] = []
     i = 0
     tid = 0
     line = 1
@@ -71,7 +71,7 @@ class Correction:
 StringErrorOrStr = str
 
 
-def apply_token_corrections(tokens: List[Token], corrections: Sequence[Correction]) -> List[Token]:
+def apply_token_corrections(tokens: list[Token], corrections: Sequence[Correction]) -> list[Token]:
     # Apply in order of token_id ascending, but replacing text only
     corrected = list(tokens)
     for corr in sorted(corrections, key=lambda c: c.token_id):
@@ -96,7 +96,7 @@ def count_word_tokens(tokens: Sequence[Token]) -> int:
     return sum(1 for t in tokens if t.kind == "word")
 
 
-def split_tokens_in_chunks(tokens: Sequence[Token], max_words: int, overlap_words: int) -> List[Tuple[int, int]]:
+def split_tokens_in_chunks(tokens: Sequence[Token], max_words: int, overlap_words: int) -> list[tuple[int, int]]:
     """Return list of (start_idx, end_idx) token ranges for chunks.
 
     Chunks are contiguous slices of tokens with at most `max_words` word tokens. Adjacent
@@ -107,7 +107,7 @@ def split_tokens_in_chunks(tokens: Sequence[Token], max_words: int, overlap_word
     """
     if max_words <= 0:
         return [(0, len(tokens))]
-    ranges: List[Tuple[int, int]] = []
+    ranges: list[tuple[int, int]] = []
     n = len(tokens)
     i = 0
     while i < n:
@@ -239,7 +239,7 @@ def _is_sentence_end_or_closer_seq(tokens: Sequence[Token], idx: int, min_idx: i
     return False
 
 
-def sentence_bounds(tokens: Sequence[Token], center_index: int) -> Tuple[int, int]:
+def sentence_bounds(tokens: Sequence[Token], center_index: int) -> tuple[int, int]:
     """Return (start, end) token indices for the sentence surrounding center_index.
 
     The end index is exclusive. Newlines and .,!,?,… are treated as sentence boundaries.
@@ -280,7 +280,7 @@ def build_sentence_context(tokens: Sequence[Token], center_index: int, max_chars
 
 def split_tokens_by_char_budget(
     tokens: Sequence[Token], *, char_budget: int, overlap_chars: int
-) -> List[tuple[int, int]]:
+) -> list[tuple[int, int]]:
     """Return list of (start_idx, end_idx) ranges such that each chunk has <= char_budget.
 
     Char count is computed as the sum of token.text lengths for tokens inside the range.
@@ -288,7 +288,7 @@ def split_tokens_by_char_budget(
     """
     if char_budget <= 0:
         return [(0, len(tokens))]
-    ranges: List[tuple[int, int]] = []
+    ranges: list[tuple[int, int]] = []
     n = len(tokens)
     i = 0
     while i < n:

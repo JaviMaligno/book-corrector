@@ -8,12 +8,13 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
+from corrector.docx_utils import read_paragraphs
 from corrector.engine import process_document
 from corrector.model import GeminiCorrector
 from corrector.prompt import load_base_prompt
-from corrector.docx_utils import read_paragraphs
 
 # Paths
 sample = Path('tests/samples/gemini_live_input.docx')
@@ -52,7 +53,7 @@ print("=" * 80)
 if log_json.exists():
     content = log_json.read_text(encoding='utf-8')
     if content.strip():
-        lines = [l for l in content.splitlines() if l.strip()]
+        lines = [ln for ln in content.splitlines() if ln.strip()]
         print(f"Total de correcciones: {len(lines)}")
         for line in lines:
             entry = json.loads(line)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -11,7 +10,6 @@ from .db import get_session
 from .deps import get_current_user
 from .models import Document, DocumentKind, DocumentStatus, Project, User
 from .storage import save_upload_for_project
-
 
 router = APIRouter(prefix="/projects/{project_id}/documents", tags=["documents"])
 
@@ -30,7 +28,7 @@ def list_documents(
 @router.post("/upload", response_model=list[Document])
 def upload_documents(
     project_id: str,
-    files: List[UploadFile] = File(...),
+    files: list[UploadFile] = File(...),
     session: Session = Depends(get_session),
     current: User = Depends(get_current_user),
 ):

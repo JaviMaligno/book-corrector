@@ -2,46 +2,43 @@ from __future__ import annotations
 
 import json
 import os
-import uuid
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 
-from .deps import get_current_user
 from .db import get_session
+from .deps import get_current_user
 from .limits import FREE, PREMIUM
 from .models import (
     Document,
     DocumentKind,
+    Export,
     Project,
     Run,
     RunDocument,
     RunDocumentStatus,
     RunMode,
     RunStatus,
-    Export,
     User,
 )
 from .scheduler import RunJob, User as SUser
 from .scheduler_registry import get_scheduler
-
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
 
 class CreateRunRequest(BaseModel):
     project_id: str
-    documents: List[str] = Field(default_factory=list, description="Document names (legacy)")
-    document_ids: List[str] | None = Field(default=None, description="Preferred: Document IDs")
+    documents: list[str] = Field(default_factory=list, description="Document names (legacy)")
+    document_ids: list[str] | None = Field(default=None, description="Preferred: Document IDs")
     mode: RunMode = Field(default=RunMode.rapido)
     use_ai: bool = False
 
 
 class CreateRunResponse(BaseModel):
     run_id: str
-    accepted_documents: List[str]
+    accepted_documents: list[str]
     queued: int
 
 
@@ -57,9 +54,9 @@ def _limits_for(role: str):
 
 
 def _ensure_documents(
-    session: Session, project_id: str, names: List[str]
-) -> List[Document]:
-    docs: List[Document] = []
+    session: Session, project_id: str, names: list[str]
+) -> list[Document]:
+    docs: list[Document] = []
     for name in names:
         d = session.exec(
             select(Document).where(Document.project_id == project_id, Document.name == name)
@@ -82,7 +79,7 @@ def create_run(
     proj = session.get(Project, req.project_id)
     if not proj or proj.owner_id != current.id:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
-    doc_ids: List[str] = req.document_ids or []
+    doc_ids: list[str] = req.document_ids or []
     if not doc_ids and not req.documents:
         raise HTTPException(status_code=400, detail="Debe indicar al menos un documento")
 
@@ -97,7 +94,7 @@ def create_run(
     session.commit()
     session.refresh(run)
 
-    docs: List[Document]
+    docs: list[Document]
     if doc_ids:
         docs = []
         for did in doc_ids:
@@ -116,7 +113,6 @@ def create_run(
 
     # Enqueue into in-memory scheduler (fair-share) and respect per-plan limits
     role_value = current.role.value if hasattr(current.role, 'value') else str(current.role)
-    limits = _limits_for(role_value)
     sched = get_scheduler()
     sched.register_user(SUser(id=current.id, plan=role_value))
     job = RunJob(
@@ -177,7 +173,7 @@ def _categorize_export(path: str) -> str:
     return "other"
 
 
-@router.get("/{run_id}/exports", response_model=List[ExportInfo])
+@router.get("/{run_id}/exports", response_model=list[ExportInfo])
 def list_exports(
     run_id: str, session: Session = Depends(get_session), current: User = Depends(get_current_user)
 ):
@@ -185,7 +181,7 @@ def list_exports(
     if not run:
         raise HTTPException(status_code=404, detail="Run no encontrado")
     exps = session.exec(select(Export).where(Export.run_id == run_id)).all()
-    results: List[ExportInfo] = []
+    results: list[ExportInfo] = []
     for e in exps:
         try:
             size = os.path.getsize(e.path)
@@ -203,9 +199,10 @@ def list_exports(
     return results
 
 
-from fastapi.responses import FileResponse, StreamingResponse
 import csv
 import json as _json
+
+from fastapi.responses import FileResponse, StreamingResponse
 
 
 @router.get("/{run_id}/exports/{export_id}/download")
@@ -250,7 +247,7 @@ def export_csv(
         for p in jsonl_paths:
             docname = os.path.basename(p).replace(".corrections.jsonl", "")
             try:
-                with open(p, "r", encoding="utf-8") as f:
+                with open(p, encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
                         if not line:

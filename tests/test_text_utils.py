@@ -1,4 +1,4 @@
-from corrector.text_utils import tokenize, apply_token_corrections, Correction, detokenize
+from corrector.text_utils import Correction, apply_token_corrections, detokenize, tokenize
 
 
 def test_tokenize_and_apply_replacement():

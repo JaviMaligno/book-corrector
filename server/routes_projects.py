@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from .deps import get_current_user
 from .db import get_session
-from .models import Project, User, Document, Run
-
+from .deps import get_current_user
+from .models import Document, Project, Run, User
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 

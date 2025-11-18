@@ -2,17 +2,31 @@
 Setup demo data for showcasing the corrector functionality.
 Creates sample projects, runs, and correction artifacts.
 """
-import os
 import json
+import os
 from pathlib import Path
+
 from sqlmodel import Session, select
+
 from .db import engine
 from .models import (
-    User, Project, Document, DocumentKind, Run, RunDocument,
-    RunDocumentStatus, RunMode, RunStatus, Export, ExportKind,
-    Suggestion, SuggestionType, SuggestionSeverity, SuggestionSource, SuggestionStatus
+    Document,
+    DocumentKind,
+    Export,
+    ExportKind,
+    Project,
+    Run,
+    RunDocument,
+    RunDocumentStatus,
+    RunMode,
+    RunStatus,
+    Suggestion,
+    SuggestionSeverity,
+    SuggestionSource,
+    SuggestionStatus,
+    SuggestionType,
+    User,
 )
-
 
 SAMPLE_CORRECTIONS = [
     {
@@ -358,8 +372,8 @@ def setup_demo_data():
 
         # Persist suggestions to database
         # First, tokenize the document to get correct token IDs
-        from corrector.text_utils import tokenize
         from corrector.docx_utils import read_paragraphs
+        from corrector.text_utils import tokenize
         
         paragraphs = read_paragraphs(str(doc_path))
         full_text = "\n".join(paragraphs)

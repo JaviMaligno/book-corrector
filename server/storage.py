@@ -4,10 +4,8 @@ import hashlib
 import os
 import re
 from pathlib import Path
-from typing import Tuple
 
 from fastapi import UploadFile
-
 
 _FILENAME_SAFE = re.compile(r"[^A-Za-z0-9._ -]+")
 
@@ -39,7 +37,7 @@ def ext_to_kind(ext: str) -> str:
 
 def save_upload_for_project(
     *, user_id: str, project_id: str, up: UploadFile
-) -> Tuple[Path, str, str]:
+) -> tuple[Path, str, str]:
     """Save an UploadFile under storage/<user>/<project>/ and return (path, checksum, kind).
 
     The file is saved streaming to avoid large memory usage, computing sha256 on the fly.

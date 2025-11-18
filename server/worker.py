@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
-from pathlib import Path
-from typing import Optional
-
-from sqlmodel import Session, select
-import os
 import uuid
+from pathlib import Path
 
-from .db import engine
+from sqlmodel import select
+
+from corrector.docx_utils import read_paragraphs, write_docx_preserving_runs, write_paragraphs
+from corrector.engine import LogEntry, process_paragraphs
+from corrector.model import HeuristicCorrector
+
 from .models import (
     Document,
     Export,
@@ -24,10 +26,6 @@ from .scheduler import DocumentTask
 from .scheduler_registry import get_scheduler
 from .storage import storage_base
 
-from corrector.engine import process_document, process_paragraphs, LogEntry
-from corrector.model import HeuristicCorrector
-from corrector.docx_utils import read_paragraphs, write_docx_preserving_runs, write_paragraphs
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,7 +38,7 @@ class Worker:
     """
 
     def __init__(self, poll_interval: float = 0.5) -> None:
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._poll_interval = poll_interval
         self._worker_id = str(uuid.uuid4())
@@ -143,8 +141,8 @@ class Worker:
 
         # Seleccionar corrector según configuración
         if use_ai:
-            from corrector.model import GeminiCorrector
             from corrector.llm import LLMNotConfigured
+            from corrector.model import GeminiCorrector
             try:
                 corrector = GeminiCorrector()
                 logger.info("✅ Using Gemini AI corrector for document: %s", doc_name)
@@ -254,8 +252,9 @@ class Worker:
 
         Returns True if lock acquired; False otherwise.
         """
-        from .db import session_scope
         import datetime as dt
+
+        from .db import session_scope
 
         now = dt.datetime.utcnow()
         lease_deadline = now - dt.timedelta(seconds=self._lock_ttl)
@@ -297,7 +296,7 @@ class Worker:
             ]
             writer.writerow(header)
             try:
-                with open(jsonl_path, "r", encoding="utf-8") as f_in:
+                with open(jsonl_path, encoding="utf-8") as f_in:
                     for line in f_in:
                         line = line.strip()
                         if not line:
@@ -323,7 +322,7 @@ class Worker:
     def _persist_suggestions(self, task: DocumentTask, log_entries: list[LogEntry]) -> None:
         """Persist log entries as Suggestion records in database."""
         from .db import session_scope
-        from .models import Suggestion, SuggestionType, SuggestionSeverity, SuggestionSource
+        from .models import Suggestion, SuggestionSeverity, SuggestionSource, SuggestionType
 
         with session_scope() as session:
             for entry in log_entries:
@@ -403,7 +402,7 @@ class Worker:
         total = 0
         reasons: Counter[str] = Counter()
         try:
-            with open(jsonl_path, "r", encoding="utf-8") as f:
+            with open(jsonl_path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:

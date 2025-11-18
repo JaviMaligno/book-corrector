@@ -9,7 +9,6 @@ from .db import get_session
 from .deps import get_current_user
 from .models import Role, User
 
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 

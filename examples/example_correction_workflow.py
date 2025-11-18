@@ -13,10 +13,9 @@ Requirements:
 - Server running on http://localhost:8000
 - Valid authentication token
 """
-import requests
 import time
-from typing import Dict, List
 
+import requests
 
 API_BASE = "http://localhost:8000"
 
@@ -31,12 +30,12 @@ def login(email: str, password: str) -> str:
     return response.json()["access_token"]
 
 
-def get_headers(token: str) -> Dict[str, str]:
+def get_headers(token: str) -> dict[str, str]:
     """Get headers with authentication."""
     return {"Authorization": f"Bearer {token}"}
 
 
-def list_suggestions(token: str, run_id: str, status: str = None) -> List[Dict]:
+def list_suggestions(token: str, run_id: str, status: str = None) -> list[dict]:
     """List all suggestions for a run, optionally filtered by status."""
     url = f"{API_BASE}/suggestions/runs/{run_id}/suggestions"
     params = {"status": status} if status else {}
@@ -45,7 +44,7 @@ def list_suggestions(token: str, run_id: str, status: str = None) -> List[Dict]:
     return response.json()["suggestions"]
 
 
-def accept_suggestion(token: str, suggestion_id: str) -> Dict:
+def accept_suggestion(token: str, suggestion_id: str) -> dict:
     """Accept a single suggestion."""
     response = requests.patch(
         f"{API_BASE}/suggestions/suggestions/{suggestion_id}",
@@ -56,7 +55,7 @@ def accept_suggestion(token: str, suggestion_id: str) -> Dict:
     return response.json()
 
 
-def reject_suggestion(token: str, suggestion_id: str) -> Dict:
+def reject_suggestion(token: str, suggestion_id: str) -> dict:
     """Reject a single suggestion."""
     response = requests.patch(
         f"{API_BASE}/suggestions/suggestions/{suggestion_id}",
@@ -67,7 +66,7 @@ def reject_suggestion(token: str, suggestion_id: str) -> Dict:
     return response.json()
 
 
-def bulk_accept(token: str, run_id: str, suggestion_ids: List[str]) -> Dict:
+def bulk_accept(token: str, run_id: str, suggestion_ids: list[str]) -> dict:
     """Accept multiple suggestions at once."""
     response = requests.post(
         f"{API_BASE}/suggestions/runs/{run_id}/suggestions/bulk-update",
@@ -78,7 +77,7 @@ def bulk_accept(token: str, run_id: str, suggestion_ids: List[str]) -> Dict:
     return response.json()
 
 
-def bulk_reject(token: str, run_id: str, suggestion_ids: List[str]) -> Dict:
+def bulk_reject(token: str, run_id: str, suggestion_ids: list[str]) -> dict:
     """Reject multiple suggestions at once."""
     response = requests.post(
         f"{API_BASE}/suggestions/runs/{run_id}/suggestions/bulk-update",
@@ -89,7 +88,7 @@ def bulk_reject(token: str, run_id: str, suggestion_ids: List[str]) -> Dict:
     return response.json()
 
 
-def accept_all(token: str, run_id: str) -> Dict:
+def accept_all(token: str, run_id: str) -> dict:
     """Accept all pending suggestions."""
     response = requests.post(
         f"{API_BASE}/suggestions/runs/{run_id}/suggestions/accept-all",
@@ -99,7 +98,7 @@ def accept_all(token: str, run_id: str) -> Dict:
     return response.json()
 
 
-def reject_all(token: str, run_id: str) -> Dict:
+def reject_all(token: str, run_id: str) -> dict:
     """Reject all pending suggestions."""
     response = requests.post(
         f"{API_BASE}/suggestions/runs/{run_id}/suggestions/reject-all",

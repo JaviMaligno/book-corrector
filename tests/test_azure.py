@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Test Azure OpenAI integration"""
 import sys
+
 from corrector.model import AzureOpenAICorrector
-from corrector.text_utils import Token
 from corrector.prompt import load_base_prompt
+from corrector.text_utils import Token
 
 # Simple test tokens (id, text, start, end, kind, line)
 tokens = [

@@ -3,11 +3,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .docx_utils import read_paragraphs
 from .engine import process_document
 from .model import GeminiCorrector, HeuristicCorrector
-from .prompt import load_base_prompt, build_json_prompt
-from .docx_utils import read_paragraphs
-from .text_utils import tokenize, count_word_tokens
+from .prompt import build_json_prompt, load_base_prompt
+from .text_utils import count_word_tokens, tokenize
 
 try:
     from settings import get_settings

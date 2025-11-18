@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
 
 from .text_utils import Token
 
@@ -19,7 +18,7 @@ def load_base_prompt(path: str | None = None) -> str:
     )
 
 
-def build_json_prompt(base_prompt: str, tokens: List[Token], sanitize_for_azure: bool = False) -> str:
+def build_json_prompt(base_prompt: str, tokens: list[Token], sanitize_for_azure: bool = False) -> str:
     """Build a compact instruction asking for precise token-level corrections.
 
     The model must only return JSON with structure:

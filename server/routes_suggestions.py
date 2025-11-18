@@ -1,13 +1,11 @@
 """API endpoints for managing correction suggestions."""
 from __future__ import annotations
 
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
-from .deps import get_current_user
 from .db import get_session
+from .deps import get_current_user
 from .models import Run, Suggestion, SuggestionStatus, User
 from .schemas import (
     BulkUpdateSuggestionsRequest,
@@ -61,8 +59,8 @@ def list_suggestions(
         try:
             status_enum = SuggestionStatus(status)
             query = query.where(Suggestion.status == status_enum)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=f"Invalid status: {status}") from err
 
     suggestions = session.exec(query).all()
 
@@ -215,11 +213,18 @@ def export_document_with_accepted_corrections(
 ):
     """Generate final document with only accepted corrections applied."""
     from pathlib import Path
+
     from fastapi.responses import Response
-    from corrector.text_utils import Token, Correction, apply_token_corrections, tokenize, detokenize
-    from corrector.docx_utils import read_paragraphs, write_docx_preserving_runs
-    from server.storage import storage_base
+
+    from corrector.docx_utils import read_paragraphs
+    from corrector.text_utils import (
+        Correction,
+        apply_token_corrections,
+        detokenize,
+        tokenize,
+    )
     from server.models import Document, RunDocument
+    from server.storage import storage_base
 
     # Verify run exists and user owns it
     run = session.get(Run, run_id)

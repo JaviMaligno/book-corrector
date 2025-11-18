@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
+from corrector.docx_utils import read_paragraphs
 from corrector.engine import process_document
 from corrector.model import GeminiCorrector
 from corrector.prompt import load_base_prompt
-from corrector.docx_utils import write_paragraphs, read_paragraphs
 
 # Load .env file
 load_dotenv()
@@ -42,8 +42,8 @@ def test_gemini_live_corrections_and_proper_names(tmp_path: Path):
     assert 'María' in out_text
     assert 'Barcelona' in out_text
 
-    lines = [l for l in log_json.read_text(encoding='utf-8').splitlines() if l.strip()]
-    entries = [json.loads(l) for l in lines]
+    lines = [ln for ln in log_json.read_text(encoding='utf-8').splitlines() if ln.strip()]
+    entries = [json.loads(ln) for ln in lines]
     # Correcciones pueden ser cero dependiendo del modelo/prompts; si hay, validar que sean relevantes
     originals = {e.get('original','').lower() for e in entries}
     # Si hay alguna, preferimos que toque una confusión típica

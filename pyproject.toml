@@ -59,6 +59,8 @@ select = [
 ]
 ignore = [
   "E501",  # handled by black
+  "B008",  # allow Depends() in function defaults (FastAPI pattern)
+  "E402",  # allow imports after setup code (load_dotenv, logging, sys.path)
 ]
 
 [tool.ruff.lint.isort]

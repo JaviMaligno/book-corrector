@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import datetime as dt
 import os
-from typing import Optional
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=True)
 
@@ -23,7 +21,7 @@ def create_access_token(subject: str, expires_minutes: int = 60) -> str:
     return token
 
 
-def verify_token(token: str) -> Optional[str]:
+def verify_token(token: str) -> str | None:
     try:
         payload = jwt.decode(token, get_secret_key(), algorithms=["HS256"])
         sub = payload.get("sub")

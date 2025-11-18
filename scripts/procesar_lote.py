@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Script para procesar un lote de documentos y extraer solo los .corrections.docx
 
 Uso:
@@ -14,9 +13,10 @@ Salida:
     - Archivos .corrections.docx en correcciones_finales/
 """
 import sys
-import requests
 import time
 from pathlib import Path
+
+import requests
 
 # Set UTF-8 encoding for Windows console
 if sys.platform == "win32":
@@ -115,7 +115,7 @@ def main():
         time.sleep(10)
 
     # 6. Descargar correcciones
-    print(f"\n[DOWNLOAD] Descargando archivos de correcciones...")
+    print("\n[DOWNLOAD] Descargando archivos de correcciones...")
     resp = requests.get(f"{API_URL}/runs/{run_id}/exports", headers=headers)
     resp.raise_for_status()
     exports = resp.json()
@@ -136,7 +136,7 @@ def main():
         with open(output_path, "wb") as f:
             f.write(resp.content)
 
-        print(f"[OK]")
+        print("[OK]")
 
     print(f"\n[DONE] Completado! Archivos guardados en: {OUTPUT_DIR.absolute()}")
     print(f"   Total de archivos: {len(list(OUTPUT_DIR.glob('*.docx')))}")

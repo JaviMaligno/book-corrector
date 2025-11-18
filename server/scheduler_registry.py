@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import os
-from typing import Optional
 
 from .limits import SYSTEM_MAX_WORKERS
 from .scheduler import InMemoryScheduler
 
-_scheduler: Optional[InMemoryScheduler] = None
+_scheduler: InMemoryScheduler | None = None
 
 
 def get_scheduler() -> InMemoryScheduler:

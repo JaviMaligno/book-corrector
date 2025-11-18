@@ -1,5 +1,4 @@
 import sys
-from pathlib import Path
 
 if sys.platform == 'win32':
     import io
@@ -7,6 +6,7 @@ if sys.platform == 'win32':
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Usar el CLI directamente con importación
@@ -18,4 +18,5 @@ sys.argv = [
 ]
 
 from corrector.cli import main
+
 main()

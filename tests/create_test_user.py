@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import requests
 import json
-import sys
+
+import requests
 
 # Datos del usuario de prueba
 user_data = {

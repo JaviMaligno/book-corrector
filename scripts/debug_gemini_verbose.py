@@ -1,7 +1,7 @@
 """Script para ver la respuesta RAW de Gemini."""
-from pathlib import Path
 import json
 import sys
+from pathlib import Path
 
 # Configurar UTF-8 en Windows
 if sys.platform == 'win32':
@@ -9,11 +9,11 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-from corrector.llm import get_gemini_client
-from corrector.prompt import load_base_prompt, build_json_prompt
 from corrector.docx_utils import read_paragraphs
-from corrector.text_utils import tokenize
+from corrector.llm import get_gemini_client
 from corrector.model import CorrectionsResponse, _build_tools_from_pydantic, _extract_function_call
+from corrector.prompt import build_json_prompt, load_base_prompt
+from corrector.text_utils import tokenize
 
 # Leer el archivo de entrada
 sample = Path(__file__).resolve().parent / 'tests' / 'samples' / 'gemini_live_input.docx'
@@ -123,7 +123,7 @@ print("\n" + "=" * 80)
 print("RESUMEN")
 print("=" * 80)
 print("Token 43 debería ser corregido:")
-print(f"  ID: 43")
+print("  ID: 43")
 print(f"  Texto: '{tokens[43].text}'")
 print(f"  Contexto: '...{tokens[37].text} {tokens[39].text} {tokens[41].text} {tokens[43].text}...'")
-print(f"  → Debería ser 'bello' (contexto estético)")
+print("  → Debería ser 'bello' (contexto estético)")
