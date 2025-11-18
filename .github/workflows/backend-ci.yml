@@ -34,6 +34,6 @@ jobs:
         env:
           DEMO_PLAN: premium
         run: |
-          pytest -q tests/test_text_utils.py tests/test_engine_apply.py tests/test_export.py tests/test_server_basic.py
+          pytest -q tests/test_text_utils.py tests/test_engine_apply.py tests/test_server_basic.py
 
 

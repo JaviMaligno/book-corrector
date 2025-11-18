@@ -11,6 +11,7 @@ htmlcov/
 venv/
 *.txt
 *lock.json
+!package-lock.json
 uv.lock
 .claude/settings.local.json
 tests/run_test.bat
