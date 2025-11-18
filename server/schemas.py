@@ -16,7 +16,7 @@ class CreateRunRequest(BaseModel):
     project_id: str
     documents: list[str] = Field(default_factory=list)
     mode: str = Field(default="rapido", pattern="^(rapido|profesional)$")
-    use_ai: bool = False
+    use_ai: bool = True
 
 
 class CreateRunResponse(BaseModel):

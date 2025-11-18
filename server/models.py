@@ -93,7 +93,7 @@ class RunDocument(SQLModel, table=True):
     run_id: str = Field(foreign_key="run.id")
     document_id: str = Field(foreign_key="document.id")
     status: RunDocumentStatus = Field(default=RunDocumentStatus.queued)
-    use_ai: bool = Field(default=False)
+    use_ai: bool = Field(default=True)
     locked_by: str | None = None
     locked_at: dt.datetime | None = None
     heartbeat_at: dt.datetime | None = None

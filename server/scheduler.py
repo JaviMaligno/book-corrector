@@ -24,7 +24,7 @@ class DocumentTask:
     user_id: str
     run_id: str
     mode: str  # "rapido" | "profesional"
-    use_ai: bool = False
+    use_ai: bool = True
     created_at: float = field(default_factory=time.time)
 
 
@@ -35,7 +35,7 @@ class RunJob:
     project_id: str
     documents: list[str]
     mode: str
-    use_ai: bool = False
+    use_ai: bool = True
 
 
 class InMemoryScheduler:
