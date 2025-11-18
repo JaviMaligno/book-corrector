@@ -44,10 +44,12 @@ class GeminiCorrector:
                 model_name = (
                     settings.gemini_model
                     if settings and settings.gemini_model
-                    else "gemini-2.5-flash"
+                    else "gemini-2.5-pro"
                 )
-            except Exception:
-                model_name = "gemini-2.5-flash"
+                logger.info(f"📋 Settings loaded - GEMINI_MODEL from env: {settings.gemini_model}")
+            except Exception as e:
+                model_name = "gemini-2.5-pro"
+                logger.warning(f"⚠️  Failed to load settings: {e}, using default: {model_name}")
 
         self.model_name = model_name
         self.base_prompt_text = base_prompt_text or ""
@@ -177,13 +179,19 @@ class GeminiCorrector:
                                 return result
                     except Exception as azure_error:
                         logger.warning(
-                            f"⚠️  Azure OpenAI fallback failed: {azure_error}, trying gemini-2.5-flash"
+                            f"⚠️  Azure OpenAI fallback failed: {azure_error}, trying Gemini fallback"
                         )
 
-                    # If Azure failed, try flash
+                    # If Azure failed, try fallback Gemini model
                     try:
+                        from settings import get_settings
+
+                        settings = get_settings()
+                        fallback_model = settings.gemini_fallback_model or "gemini-2.5-flash"
+                        logger.info(f"🔄 Trying fallback model: {fallback_model}")
+
                         resp = self._client.models.generate_content(
-                            model="gemini-2.5-flash",
+                            model=fallback_model,
                             contents=[{"role": "user", "parts": [{"text": prompt}]}],
                             config={"response_mime_type": "application/json"},
                         )
@@ -199,7 +207,7 @@ class GeminiCorrector:
                             data = json.loads(text)
                             items = data.get("corrections") if isinstance(data, dict) else data
                             if isinstance(items, list):
-                                logger.info("✅ Fallback to gemini-2.5-flash succeeded")
+                                logger.info(f"✅ Fallback to {fallback_model} succeeded")
                                 return [CorrectionSpec(**it) for it in items]
                     except Exception as fallback_error:
                         logger.error(f"❌ All fallbacks failed: {fallback_error}")

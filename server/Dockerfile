@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy project to install the package (corrector) and server deps
 COPY pyproject.toml /app/
 COPY corrector /app/corrector
+COPY settings.py /app/settings.py
 COPY server/requirements.txt /app/server/requirements.txt
 
 RUN pip install -e . && pip install -r server/requirements.txt

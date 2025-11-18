@@ -10,6 +10,7 @@ class Settings(BaseModel):
     model_name: str | None = None
     google_api_key: str | None = None
     gemini_model: str | None = None
+    gemini_fallback_model: str | None = None
 
     # Azure OpenAI settings
     azure_openai_endpoint: str | None = None
@@ -26,7 +27,8 @@ def get_settings() -> Settings:
     load_dotenv()
     return Settings(
         google_api_key=os.getenv("GOOGLE_API_KEY"),
-        gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-pro"),
+        gemini_fallback_model=os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash"),
         azure_openai_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         azure_openai_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         azure_openai_deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
