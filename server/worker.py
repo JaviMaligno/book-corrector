@@ -122,7 +122,6 @@ class Worker:
                 if doc_rec and doc_rec.content_backup:
                     logger.info(f"Recreating document from DB backup: {doc_name}")
                     input_path.parent.mkdir(parents=True, exist_ok=True)
-                    from corrector.docx_utils import write_paragraphs
                     content_lines = doc_rec.content_backup.split("\n")
                     write_paragraphs(content_lines, str(input_path))
                     logger.info(f"✅ File recreated successfully: {input_path}")
