@@ -4,13 +4,21 @@ Migration script: Render Postgres -> Neon Postgres
 Zero-downtime migration for corrector database
 """
 
+import os
 import sys
 
 import psycopg2
+from dotenv import load_dotenv
 from psycopg2.extras import execute_values
 
-# Neon connection string
-NEON_DATABASE_URL = "postgresql://neondb_owner:npg_j0InKHxgGXa7@ep-super-poetry-abw4h76l-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+# Load environment variables
+load_dotenv()
+
+# Neon connection string from environment
+NEON_DATABASE_URL = os.getenv("NEON_DATABASE_URL")
+if not NEON_DATABASE_URL:
+    print("ERROR: NEON_DATABASE_URL not set in environment")
+    sys.exit(1)
 
 # SQL to create enum types
 ENUM_TYPES = """
