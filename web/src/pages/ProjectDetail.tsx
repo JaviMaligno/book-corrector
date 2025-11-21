@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { api, updateProject } from '../lib/api'
+import { api, updateProject, deleteProject } from '../lib/api'
 import { useState } from 'react'
 
 type ProjectDetail = {
@@ -24,6 +24,10 @@ export default function ProjectDetail(){
   const [editName, setEditName] = useState('')
   const [editVariant, setEditVariant] = useState('es-ES')
   const [editError, setEditError] = useState('')
+
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const upload = useMutation({
     mutationFn: async () => {
@@ -72,6 +76,33 @@ export default function ProjectDetail(){
     update.mutate()
   }
 
+  const deleteProj = useMutation({
+    mutationFn: async () => {
+      return await deleteProject(projectId)
+    },
+    onSuccess: () => {
+      // Redirect to projects list after deletion
+      nav('/projects')
+    },
+    onError: (error: any) => {
+      setDeleteError(
+        error?.response?.data?.detail ||
+        error.message ||
+        'Error al eliminar proyecto'
+      )
+    }
+  })
+
+  const handleDeleteClick = () => {
+    setDeleteError('')
+    setShowDeleteModal(true)
+  }
+
+  const handleConfirmDelete = () => {
+    setDeleteError('')
+    deleteProj.mutate()
+  }
+
   const run = useMutation({
     mutationFn: async () => {
       const docIds = selectedDocs.length > 0 ? selectedDocs : data?.documents?.map(d => d.id) || []
@@ -104,12 +135,20 @@ export default function ProjectDetail(){
               {data?.lang_variant || 'es-ES'}
             </div>
           </div>
-          <button
-            className="btn-secondary text-sm"
-            onClick={handleEditClick}
-          >
-            Editar
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="btn-secondary text-sm"
+              onClick={handleEditClick}
+            >
+              Editar
+            </button>
+            <button
+              className="text-sm px-3 py-2 rounded border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
+              onClick={handleDeleteClick}
+            >
+              Eliminar
+            </button>
+          </div>
         </div>
       </section>
 
@@ -171,6 +210,58 @@ export default function ProjectDetail(){
                   disabled={update.isPending || !editName.trim()}
                 >
                   {update.isPending ? 'Guardando...' : 'Guardar cambios'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold mb-4 text-red-600">¿Eliminar proyecto?</h2>
+
+            <div className="space-y-4">
+              <p className="text-gray-700">
+                ¿Estás seguro de que deseas eliminar el proyecto <strong>{data?.name}</strong>?
+              </p>
+              <p className="text-sm text-gray-600">
+                Esta acción no se puede deshacer. Se eliminarán todos los documentos asociados.
+              </p>
+
+              {data?.runs && data.runs.length > 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ Este proyecto tiene {data.runs.length} ejecución(es). No se puede eliminar.
+                  </p>
+                </div>
+              )}
+
+              {deleteError && (
+                <div className="text-red-600 text-sm">
+                  {deleteError}
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setDeleteError('')
+                  }}
+                  disabled={deleteProj.isPending}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleConfirmDelete}
+                  disabled={deleteProj.isPending || (data?.runs && data.runs.length > 0)}
+                >
+                  {deleteProj.isPending ? 'Eliminando...' : 'Eliminar proyecto'}
                 </button>
               </div>
             </div>
