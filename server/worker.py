@@ -459,6 +459,5 @@ class Worker:
         lines.append("## Próximos pasos sugeridos")
         lines.append("- Acepte/rechace cambios en DOCX según criterio editorial.")
         lines.append("- Revise consistencias intercapítulos y glosario del proyecto.")
-        lines.append("- Considere activar el modo Profesional para logs detallados y reglas finas.")
 
         summary_path.write_text("\n".join(lines), encoding="utf-8")

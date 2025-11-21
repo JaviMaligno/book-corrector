@@ -15,8 +15,8 @@ class MeLimits(BaseModel):
 class CreateRunRequest(BaseModel):
     project_id: str
     documents: list[str] = Field(default_factory=list)
-    mode: str = Field(default="rapido", pattern="^(rapido|profesional)$")
-    use_ai: bool = True
+    mode: str = Field(default="rapido", pattern="^(rapido|profesional)$")  # Deprecated
+    use_ai: bool = Field(default=True)
 
 
 class CreateRunResponse(BaseModel):

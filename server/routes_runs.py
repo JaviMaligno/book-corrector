@@ -32,8 +32,8 @@ class CreateRunRequest(BaseModel):
     project_id: str
     documents: list[str] = Field(default_factory=list, description="Document names (legacy)")
     document_ids: list[str] | None = Field(default=None, description="Preferred: Document IDs")
-    mode: RunMode = Field(default=RunMode.rapido)
-    use_ai: bool = True
+    mode: RunMode = Field(default=RunMode.rapido)  # Deprecated, kept for backward compatibility
+    use_ai: bool = Field(default=True)  # Always true in production
 
 
 class CreateRunResponse(BaseModel):
