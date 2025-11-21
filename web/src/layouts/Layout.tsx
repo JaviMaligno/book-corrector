@@ -1,9 +1,10 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import '../index.css'
 
 export default function Layout(){
   const loc = useLocation()
+  const navigate = useNavigate()
   const { user, isAuthenticated, logout } = useAuth()
 
   const tab = (path: string, label: string) => (
@@ -13,6 +14,7 @@ export default function Layout(){
   const handleLogout = async () => {
     try {
       await logout()
+      navigate('/')
     } catch (error) {
       console.error('Error during logout:', error)
     }

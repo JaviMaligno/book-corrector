@@ -19,7 +19,7 @@ FREE = PlanLimits(
     max_docs_per_run=1,
     max_docs_concurrent=1,
     rate_limit_rpm=60,
-    ai_enabled=False,
+    ai_enabled=True,
 )
 
 PREMIUM = PlanLimits(
