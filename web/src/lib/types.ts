@@ -35,3 +35,13 @@ export type SuggestionsListResponse = {
   suggestions: Suggestion[]
 }
 
+export type Project = {
+  id: string
+  owner_id: string
+  name: string
+  lang_variant: string | null
+  style_profile_id: string | null
+  config_json: string | null
+  created_at: string
+}
+

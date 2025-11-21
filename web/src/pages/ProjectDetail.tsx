@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { api } from '../lib/api'
+import { api, updateProject } from '../lib/api'
 import { useState } from 'react'
 
-type Project = {
+type ProjectDetail = {
   id: string
   name: string
+  lang_variant: string | null
   documents: { id: string; name: string; status: string }[]
   runs: { id: string; status: string; created_at: string }[]
 }
@@ -14,9 +15,15 @@ export default function ProjectDetail(){
   const { projectId = '' } = useParams()
   const nav = useNavigate()
   const qc = useQueryClient()
-  const { data } = useQuery({ queryKey: ['project', projectId], queryFn: async () => (await api.get<Project>(`/projects/${projectId}`)).data })
+  const { data } = useQuery({ queryKey: ['project', projectId], queryFn: async () => (await api.get<ProjectDetail>(`/projects/${projectId}`)).data })
   const [files, setFiles] = useState<FileList | null>(null)
   const [selectedDocs, setSelectedDocs] = useState<string[]>([])
+
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editVariant, setEditVariant] = useState('es-ES')
+  const [editError, setEditError] = useState('')
 
   const upload = useMutation({
     mutationFn: async () => {
@@ -30,6 +37,40 @@ export default function ProjectDetail(){
       setFiles(null)
     }
   })
+
+  const update = useMutation({
+    mutationFn: async () => {
+      if (!editName.trim()) {
+        throw new Error('El nombre del proyecto es requerido')
+      }
+      return await updateProject(projectId, {
+        name: editName.trim(),
+        lang_variant: editVariant
+      })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project', projectId] })
+      setShowEditModal(false)
+      setEditError('')
+    },
+    onError: (error: any) => {
+      setEditError(error?.response?.data?.detail || error.message || 'Error al actualizar proyecto')
+    }
+  })
+
+  const handleEditClick = () => {
+    if (data) {
+      setEditName(data.name)
+      setEditVariant(data.lang_variant || 'es-ES')
+      setEditError('')
+      setShowEditModal(true)
+    }
+  }
+
+  const handleUpdateClick = () => {
+    setEditError('')
+    update.mutate()
+  }
 
   const run = useMutation({
     mutationFn: async () => {
@@ -53,10 +94,89 @@ export default function ProjectDetail(){
 
   return (
     <div className="space-y-6">
+      {/* Project Info Section */}
       <section className="card p-4">
-        <h2 className="text-base font-medium">Proyecto</h2>
-        <div className="text-sm text-gray-600">{data?.name}</div>
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-base font-medium">Proyecto</h2>
+            <div className="text-sm text-gray-600 mt-1">{data?.name}</div>
+            <div className="text-xs text-gray-500 mt-1">
+              {data?.lang_variant || 'es-ES'}
+            </div>
+          </div>
+          <button
+            className="btn-secondary text-sm"
+            onClick={handleEditClick}
+          >
+            Editar
+          </button>
+        </div>
       </section>
+
+      {/* Edit Project Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold mb-4">Editar proyecto</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre del proyecto *
+                </label>
+                <input
+                  type="text"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  placeholder="Nombre del proyecto"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Variante de idioma
+                </label>
+                <select
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={editVariant}
+                  onChange={e => setEditVariant(e.target.value)}
+                >
+                  <option value="es-ES">Español (España)</option>
+                  <option value="es-MX">Español (México)</option>
+                </select>
+              </div>
+
+              {editError && (
+                <div className="text-red-600 text-sm">
+                  {editError}
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditError('')
+                  }}
+                  disabled={update.isPending}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={handleUpdateClick}
+                  disabled={update.isPending || !editName.trim()}
+                >
+                  {update.isPending ? 'Guardando...' : 'Guardar cambios'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="card p-4">
         <h3 className="text-base font-medium mb-2">Subir documentos</h3>

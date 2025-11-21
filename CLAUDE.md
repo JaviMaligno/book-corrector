@@ -30,22 +30,30 @@ uv run python -m corrector.cli documento.docx
 
 # Local mode (no API, for testing)
 python -m corrector.cli documento.docx --local-heuristics
+
+# Advanced options
+python -m corrector.cli documento.docx --no-log-docx  # Skip DOCX report
+python -m corrector.cli documento.docx --model gemini-2.5-pro  # Change model
+python -m corrector.cli documento.docx --no-preserve-format  # Don't preserve formatting
 ```
 
 ### Running Server
 ```bash
-# Local development
-uvicorn server.main:app --reload
+# Local development (backend only)
+uvicorn server.main:app --reload --port 8001
 
-# With Docker
-docker-compose up --build
+# Full stack with Docker (backend + frontend + database)
+docker-compose -f docker-compose.dev.yml up  # Development with hot-reload
+docker-compose up -d  # Production
 
-# Development with hot-reload
-docker-compose -f docker-compose.dev.yml up
-
-# Production
-docker-compose up -d
+# Frontend only (requires backend running)
+cd web && npm install && npm run dev
 ```
+
+**Service URLs:**
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8001`
+- API Docs: `http://localhost:8001/docs`
 
 ### Testing
 ```bash
@@ -60,7 +68,278 @@ pytest tests/test_gemini_fake.py
 
 # Live integration (requires GOOGLE_API_KEY and RUN_GEMINI_INTEGRATION=1 in .env)
 pytest tests/test_gemini_live.py
+
+# Server tests
+pytest tests/test_server_basic.py
 ```
+
+## Development Workflow
+
+This project is deployed on **Render** (backend + frontend) with a **Neon PostgreSQL** database. Use this workflow when implementing new features:
+
+### 1. Local Development & Testing
+
+**Backend development:**
+```bash
+# Start local stack (backend + frontend + PostgreSQL in Docker)
+docker-compose -f docker-compose.dev.yml up
+
+# Watch logs
+docker-compose -f docker-compose.dev.yml logs -f web
+
+# Run tests against local stack
+pytest tests/test_server_basic.py -v
+```
+
+**Frontend development:**
+```bash
+# Option 1: Full stack in Docker (hot-reload enabled)
+docker-compose -f docker-compose.dev.yml up
+
+# Option 2: Frontend standalone (requires backend running separately)
+cd web
+npm install
+npm run dev
+```
+
+**CLI testing:**
+```bash
+# Test CLI changes locally (no Docker)
+uv run python -m corrector.cli examples/ejemplo_test.docx
+```
+
+### 2. Database Operations (Neon MCP)
+
+Use Neon MCP tools for database management during development:
+
+**List projects and get connection info:**
+```python
+# Use mcp__neon__list_projects to find your database
+# Use mcp__neon__get_connection_string to get connection URL
+```
+
+**Run migrations:**
+```python
+# Use mcp__neon__run_sql to execute schema changes
+# Example: Adding a new column
+mcp__neon__run_sql(
+    projectId="your-project-id",
+    sql="ALTER TABLE suggestion ADD COLUMN confidence FLOAT DEFAULT 0.0"
+)
+```
+
+**Query data:**
+```python
+# Use mcp__neon__run_sql for SELECT queries
+mcp__neon__run_sql(
+    projectId="your-project-id",
+    sql="SELECT COUNT(*) FROM suggestion WHERE status='pending'"
+)
+```
+
+**Create branches for testing:**
+```python
+# Use mcp__neon__create_branch to create test branches
+# Test schema changes safely before applying to main
+```
+
+### 3. Frontend Testing (Chrome MCP)
+
+Use Chrome DevTools MCP for automated frontend testing:
+
+**Navigate and interact:**
+```python
+# Open frontend
+mcp__chrome-devtools__navigate_page(url="http://localhost:5173")
+
+# Take snapshot to see page structure
+mcp__chrome-devtools__take_snapshot()
+
+# Click elements (use uid from snapshot)
+mcp__chrome-devtools__click(uid="element-uid")
+
+# Fill forms
+mcp__chrome-devtools__fill(uid="email-input", value="test@example.com")
+```
+
+**Test corrections workflow:**
+```python
+# Login
+mcp__chrome-devtools__navigate_page(url="http://localhost:5173/login")
+mcp__chrome-devtools__fill(uid="email", value="demo@example.com")
+mcp__chrome-devtools__fill(uid="password", value="demo123")
+mcp__chrome-devtools__click(uid="login-button")
+
+# Navigate to project
+mcp__chrome-devtools__click(uid="project-link")
+
+# Upload document
+mcp__chrome-devtools__upload_file(uid="file-input", filePath="test.docx")
+
+# Verify corrections table loads
+mcp__chrome-devtools__wait_for(text="Correcciones")
+mcp__chrome-devtools__take_screenshot()
+```
+
+**Check console for errors:**
+```python
+# List console messages
+mcp__chrome-devtools__list_console_messages(types=["error", "warn"])
+```
+
+### 4. Deployment to Render
+
+**Deploy via git push:**
+```bash
+# Commit your changes
+git add .
+git commit -m "feat: add new feature X"
+
+# Push to trigger Render deployment
+git push origin main
+
+# Render will automatically:
+# 1. Build Docker images for backend and frontend
+# 2. Deploy to production
+# 3. Run database migrations (if configured)
+```
+
+**Monitor deployment (Render MCP):**
+```python
+# List services
+mcp__render__list_services()
+
+# Check deployment status
+mcp__render__list_deploys(serviceId="srv-xxx")
+
+# Get specific deploy
+mcp__render__get_deploy(serviceId="srv-xxx", deployId="dep-xxx")
+
+# View logs
+mcp__render__list_logs(
+    resource=["srv-xxx"],
+    startTime="2024-01-01T12:00:00Z",
+    limit=100
+)
+```
+
+**Update environment variables:**
+```python
+# Use Render MCP to update production config
+mcp__render__update_environment_variables(
+    serviceId="srv-xxx",
+    envVars=[
+        {"key": "GEMINI_MODEL", "value": "gemini-2.5-pro"},
+        {"key": "SYSTEM_MAX_WORKERS", "value": "4"}
+    ]
+)
+```
+
+### 5. Production Testing
+
+**Test deployed frontend:**
+```python
+# Open production URL
+mcp__chrome-devtools__navigate_page(url="https://corrector-web.onrender.com")
+
+# Run same test flows as local
+mcp__chrome-devtools__take_snapshot()
+# ... test login, upload, corrections, etc.
+```
+
+**Query production database:**
+```python
+# Use Neon MCP to check production data
+mcp__neon__run_sql(
+    projectId="your-prod-project-id",
+    sql="SELECT status, COUNT(*) FROM run GROUP BY status"
+)
+```
+
+**Monitor production metrics:**
+```python
+# Use Render MCP to get performance metrics
+mcp__render__get_metrics(
+    resourceId="srv-xxx",
+    metricTypes=["cpu_usage", "memory_usage", "http_request_count"],
+    startTime="2024-01-01T00:00:00Z"
+)
+```
+
+### 6. Debugging Production Issues
+
+**Check logs:**
+```python
+# Backend logs
+mcp__render__list_logs(
+    resource=["srv-backend-xxx"],
+    level=["error"],
+    limit=50
+)
+
+# Filter by path
+mcp__render__list_logs(
+    resource=["srv-backend-xxx"],
+    path=["/api/runs/*"],
+    statusCode=["500"]
+)
+```
+
+**Database debugging:**
+```python
+# Check failed runs
+mcp__neon__run_sql(
+    projectId="prod-project-id",
+    sql="SELECT id, status, created_at FROM run WHERE status='failed' ORDER BY created_at DESC LIMIT 10"
+)
+
+# Check pending suggestions
+mcp__neon__run_sql(
+    projectId="prod-project-id",
+    sql="SELECT run_id, COUNT(*) FROM suggestion WHERE status='pending' GROUP BY run_id"
+)
+```
+
+**Frontend debugging:**
+```python
+# Open production site
+mcp__chrome-devtools__navigate_page(url="https://corrector-web.onrender.com")
+
+# Check console errors
+mcp__chrome-devtools__list_console_messages(types=["error"])
+
+# Check network requests
+mcp__chrome-devtools__list_network_requests(resourceTypes=["fetch", "xhr"])
+
+# Get failed request details
+mcp__chrome-devtools__get_network_request(reqid=123)
+```
+
+### Common Development Patterns
+
+**Pattern 1: Add new API endpoint**
+1. Add route to `server/routes_*.py`
+2. Add schema to `server/schemas.py`
+3. Test locally: `curl http://localhost:8001/your-endpoint`
+4. Test with Chrome MCP if frontend integration needed
+5. Push to deploy
+6. Monitor with Render MCP logs
+
+**Pattern 2: Database schema change**
+1. Create Neon branch for testing: `mcp__neon__create_branch`
+2. Test migration on branch: `mcp__neon__run_sql(branchId=...)`
+3. Verify with queries
+4. Apply to main: `mcp__neon__run_sql` (main branch)
+5. Update SQLModel models in `server/models.py`
+6. Deploy
+
+**Pattern 3: Frontend feature**
+1. Develop in `web/src/`
+2. Test locally: `npm run dev`
+3. Test with Chrome MCP: navigate, click, fill, screenshot
+4. Check console/network with Chrome MCP
+5. Push to deploy
+6. Test production with Chrome MCP on live URL
 
 ## Architecture
 
@@ -185,22 +464,74 @@ assert '"original"' in log_lines[0]
 
 ### Environment Variables
 
-**CLI:**
-- `GOOGLE_API_KEY`: Required for Gemini (get from https://aistudio.google.com/app/apikey)
-- `GEMINI_MODEL`: Default `gemini-2.5-flash` (do NOT use `gemini-1.5-pro-latest` - 404 error)
+Copy `.env.example` to `.env` and configure:
+
+**Core Configuration:**
+- `SECRET_KEY`: JWT secret key (change in production!)
+- `DATABASE_URL`: PostgreSQL connection URL (Neon or local)
+- `STORAGE_DIR`: Local storage directory for artifacts (default: `./storage`)
+- `LOG_LEVEL`: Logging level (`INFO`, `DEBUG`, `WARNING`, `ERROR`)
+- `SYSTEM_MAX_WORKERS`: Max concurrent correction workers (default: `2`)
+- `DEMO_PLAN`: Demo user plan (`free` or `premium`, default: `free`)
+- `FRONTEND_URL`: Frontend URL for CORS (e.g., `https://corrector-web.onrender.com`)
+
+**Google Gemini API (Primary LLM):**
+- `GOOGLE_API_KEY`: **Required** - Get from https://aistudio.google.com/app/apikey
+- `GEMINI_MODEL`: Model selection (default: `gemini-2.5-flash`)
+  - Options: `gemini-2.5-flash`, `gemini-2.5-pro`
+  - **Do NOT use** `gemini-1.5-pro-latest` (404 error)
 - `RUN_GEMINI_INTEGRATION`: Set to `1` to enable live integration tests
 
-**Server:**
-- `GOOGLE_API_KEY`: Required for Gemini API
-- `GEMINI_MODEL`: Model selection (default: `gemini-2.5-flash`)
-- `DEMO_PLAN`: Demo user plan (`free` or `premium`, default: `free`)
-- `SYSTEM_MAX_WORKERS`: Max concurrent jobs system-wide (default: `2`)
+**Azure OpenAI (Alternative LLM, optional):**
+- `AZURE_OPENAI_ENDPOINT`: Azure endpoint URL
+- `AZURE_OPENAI_API_KEY`: Azure API key
+- `AZURE_OPENAI_DEPLOYMENT_NAME`: Deployment name (e.g., `gpt-4`)
+- `AZURE_OPENAI_API_VERSION`: API version (e.g., `2024-02-15-preview`)
+- `AZURE_OPENAI_MODEL_NAME`: Model name (e.g., `gpt-4`)
+- `AZURE_OPENAI_FALLBACK_DEPLOYMENT_NAME`: Fallback deployment
+- `AZURE_OPENAI_FALLBACK_API_VERSION`: Fallback API version
+
+**Deployment (for automation scripts):**
+- `RENDER_API_KEY`: Render API key for deployment management
+- `TOKEN`: JWT token for testing scripts
+- `TEST_EMAIL`: Test user email (default: `demo@example.com`)
+- `TEST_PASSWORD`: Test user password (default: `demo123`)
+
+**Production URLs:**
+- Local: `http://localhost:8001` (backend), `http://localhost:5173` (frontend)
+- Render: Auto-generated URLs (e.g., `https://corrector-api-xxx.onrender.com`)
+
+### Plan Limits Configuration
+
+Defined in `server/limits.py`:
+
+**FREE plan:**
+```python
+max_runs_concurrent = 1      # Only 1 active run at a time
+max_docs_per_run = 1         # Only 1 document per run
+max_docs_concurrent = 1      # Only 1 document processing at a time
+rate_limit_rpm = 60          # 60 requests per minute
+ai_enabled = True
+```
+
+**PREMIUM plan:**
+```python
+max_runs_concurrent = 2      # Up to 2 concurrent runs
+max_docs_per_run = 3         # Up to 3 documents per run
+max_docs_concurrent = 3      # Up to 3 documents processing simultaneously
+rate_limit_rpm = 300         # 300 requests per minute
+ai_enabled = True
+```
+
+To change the demo user's plan, set `DEMO_PLAN=premium` in `.env`.
 
 ### Prompt Customization
-Edit `docs/base-prompt.md` (loaded by `prompt.py:load_base_prompt()`)
-- Keep concise (verbose prompts performed worse)
-- Explicitly list lexical confusion pairs
+
+Edit `docs/base-prompt.md` (loaded by `prompt.py:load_base_prompt()`):
+- Keep concise (verbose prompts performed worse in testing)
+- Explicitly list lexical confusion pairs (vaca/baca, vello/bello, etc.)
 - Emphasize returning ONLY actual corrections (not explanations)
+- Use examples to guide LLM behavior
 
 ## Key Files
 
@@ -251,25 +582,302 @@ if global_id in applied_global:
 
 ```
 corrector/          # Core correction engine
+  ├── cli.py        # CLI entry point
+  ├── engine.py     # Main processing loop, chunking, filtering
+  ├── model.py      # GeminiCorrector + HeuristicCorrector
+  ├── text_utils.py # Tokenization, detokenization
+  ├── docx_utils.py # DOCX I/O with format preservation
+  ├── prompt.py     # Loads base-prompt.md
+  └── llm.py        # Gemini client initialization
+
 server/             # FastAPI server with scheduler
-  ├── main.py       # App factory and routes
-  ├── scheduler.py  # Fair-share job scheduler
-  ├── limits.py     # Plan quotas (free/premium)
-  └── schemas.py    # Pydantic models
+  ├── main.py       # App factory, CORS, artifact downloads
+  ├── models.py     # SQLModel database schemas
+  ├── schemas.py    # Pydantic API request/response models
+  ├── routes_auth.py      # /auth endpoints (register, login)
+  ├── routes_projects.py  # /projects endpoints
+  ├── routes_documents.py # /documents endpoints
+  ├── routes_runs.py      # /runs endpoints
+  ├── routes_suggestions.py # /suggestions endpoints
+  ├── scheduler.py        # InMemoryScheduler (fair-share queues)
+  ├── scheduler_registry.py # Global scheduler instance
+  ├── worker.py     # Background correction worker
+  ├── limits.py     # Plan quotas (FREE/PREMIUM constants)
+  ├── db.py         # SQLModel database initialization
+  ├── auth.py       # JWT token creation/verification
+  ├── deps.py       # FastAPI dependencies (get_current_user)
+  ├── storage.py    # Artifact storage management
+  ├── migrate.py    # Database migration utilities
+  └── demo_data.py  # Demo user creation
+
+web/                # React + Vite frontend
+  ├── src/
+  │   ├── components/
+  │   │   ├── CorrectionsTable.tsx  # Main corrections display with 3 views
+  │   │   └── ContextSnippet.tsx    # Context highlighting
+  │   ├── pages/
+  │   │   ├── Login.tsx             # Login page
+  │   │   ├── Register.tsx          # Registration page
+  │   │   ├── Projects.tsx          # Projects list
+  │   │   ├── ProjectDetail.tsx     # Project details + upload
+  │   │   ├── RunDetail.tsx         # Run status + progress
+  │   │   ├── CorrectionsView.tsx   # Corrections review (server mode)
+  │   │   └── Viewer.tsx            # Legacy JSONL viewer
+  │   ├── contexts/
+  │   │   └── AuthContext.tsx       # JWT auth state management
+  │   ├── layouts/
+  │   │   └── Layout.tsx            # Main layout with nav
+  │   ├── lib/
+  │   │   ├── api.ts                # API client functions
+  │   │   ├── auth.ts               # Auth helpers
+  │   │   └── types.ts              # TypeScript types
+  │   └── main.tsx                  # React entry point
+  ├── Dockerfile                    # Frontend container
+  └── vite.config.ts                # Vite configuration
+
 tests/
   ├── samples/      # Test DOCX files (tracked in git)
   ├── outputs/      # Test outputs (gitignored)
+  ├── test_text_utils.py    # Tokenization tests
+  ├── test_engine_apply.py  # End-to-end tests
+  ├── test_gemini_fake.py   # Mock Gemini tests
+  ├── test_gemini_live.py   # Live API integration tests
   └── test_server_basic.py  # Server integration tests
+
 outputs/            # Production outputs (gitignored)
 examples/           # User documents (gitignored except ejemplo_*.docx)
 docs/               # Documentation including base-prompt.md
 scripts/            # Debug scripts (gitignored)
-Dockerfile          # Multi-stage production image
-docker-compose.yml  # Production deployment
+Dockerfile          # Multi-stage backend image
+docker-compose.yml  # Production deployment (backend + frontend + db)
 docker-compose.dev.yml  # Development with hot-reload
 ```
 
 **Gitignore strategy**: All `.docx` files excluded except `tests/samples/*.docx` and `examples/ejemplo_*.docx`. All generated outputs excluded.
+
+## Frontend Architecture (React + Vite)
+
+The frontend is a single-page application built with React, TypeScript, and Vite.
+
+### Key Features
+
+**Authentication Flow:**
+- JWT-based authentication stored in localStorage
+- `AuthContext` provides global auth state
+- Protected routes redirect to login if not authenticated
+- Auto-refresh on page load
+
+**Corrections Review Interface:**
+- **Three view modes**: Inline, Stacked, Side-by-side
+- **Accept/Reject workflow**: Individual buttons or bulk selection with checkboxes
+- **Progress bar**: Visual segmentation of pending/accepted/rejected
+- **Filtering**: By status (pending/accepted/rejected) using tabs
+- **Search**: Filter by original text, replacement, or reason
+- **Export**: Download DOCX with only accepted corrections
+
+**Server vs Legacy Mode:**
+- **Server mode**: Suggestions stored in database, full accept/reject workflow
+- **Legacy mode**: JSONL files only, read-only view (backward compatibility)
+
+### Component Structure
+
+**Pages:**
+- `Login.tsx` / `Register.tsx`: Auth forms
+- `Projects.tsx`: List all user projects
+- `ProjectDetail.tsx`: Project details + document upload (multi-file)
+- `RunDetail.tsx`: Run status, progress tracking, artifact downloads
+- `CorrectionsView.tsx`: Main corrections review page (server mode with accept/reject)
+- `Viewer.tsx`: Legacy JSONL viewer (read-only)
+
+**Components:**
+- `CorrectionsTable.tsx`: Main table with 3 view modes, accept/reject buttons
+- `ContextSnippet.tsx`: Context highlighting with original/corrected
+
+**State Management:**
+- `AuthContext`: Global JWT token + user state
+- Component-local state with `useState` for UI interactions
+- API calls via `lib/api.ts` helper functions
+
+### API Integration
+
+All API calls in `web/src/lib/api.ts`:
+```typescript
+// Authentication
+login(email, password) → {access_token}
+register(email, password) → {access_token}
+
+// Projects
+listProjects() → Project[]
+createProject(name) → Project
+uploadDocuments(projectId, files) → Document[]
+
+// Runs
+createRun(projectId, documentIds, useAi) → {run_id}
+getRun(runId) → Run with status + progress
+
+// Suggestions
+listSuggestions(runId, status?) → Suggestion[]
+updateSuggestion(suggestionId, status) → Suggestion
+bulkUpdateSuggestions(runId, suggestionIds, status) → void
+acceptAllSuggestions(runId) → void
+rejectAllSuggestions(runId) → void
+exportWithAccepted(runId) → Blob (DOCX file)
+```
+
+### Styling
+
+- **Tailwind CSS** for utility-first styling
+- **shadcn/ui** components (Button, Card, Progress, etc.)
+- Responsive design for mobile/tablet/desktop
+
+## Database Models (SQLModel)
+
+### Core Tables
+
+**User:**
+```python
+- id: str (UUID)
+- email: str (unique)
+- password_hash: str
+- role: Role (free | premium | admin)
+- created_at: datetime
+```
+
+**Project:**
+```python
+- id: str (UUID)
+- owner_id: str → User.id
+- name: str
+- lang_variant: str? (es-ES, es-MX)
+- style_profile_id: str?
+- config_json: str?
+- created_at: datetime
+```
+
+**Document:**
+```python
+- id: str (UUID)
+- project_id: str → Project.id
+- name: str
+- path: str? (storage path)
+- kind: DocumentKind (docx | txt | md)
+- checksum: str?
+- status: DocumentStatus (new | queued | processing | ready)
+- content_backup: str? (for ephemeral storage)
+```
+
+**Run:**
+```python
+- id: str (UUID)
+- project_id: str → Project.id
+- submitted_by: str → User.id
+- mode: RunMode (rapido | profesional)
+- status: RunStatus (queued | processing | exporting | completed | failed | canceled)
+- params_json: str?
+- created_at: datetime
+- started_at: datetime?
+- finished_at: datetime?
+```
+
+**RunDocument:**
+```python
+- id: str (UUID)
+- run_id: str → Run.id
+- document_id: str → Document.id
+- status: RunDocumentStatus (queued | processing | completed | failed)
+- use_ai: bool
+- locked_by: str? (worker ID)
+- locked_at: datetime?
+- heartbeat_at: datetime?
+- attempt_count: int
+```
+
+**Suggestion:**
+```python
+- id: str (UUID)
+- run_id: str → Run.id
+- document_id: str → Document.id
+- token_id: int (stable token position)
+- line: int (paragraph number)
+- suggestion_type: SuggestionType (ortografia | puntuacion | concordancia | estilo | lexico | otro)
+- severity: Severity (error | warning | info)
+- before: str (original text)
+- after: str (suggested replacement)
+- reason: str (explanation)
+- source: Source (rule | llm)
+- confidence: float? (0.0-1.0 for AI)
+- context: str? (surrounding text)
+- sentence: str? (full sentence)
+- status: SuggestionStatus (pending | accepted | rejected)
+- created_at: datetime
+```
+
+### Key Relationships
+
+```
+User → Project (one-to-many)
+Project → Document (one-to-many)
+Project → Run (one-to-many)
+Run → RunDocument (one-to-many)
+Document → RunDocument (one-to-many)
+Run → Suggestion (one-to-many)
+Document → Suggestion (one-to-many)
+```
+
+## Batch Processing & Rate Limiting
+
+### Rate Limits by Model
+
+The system automatically applies rate limiting based on the Gemini model:
+
+**gemini-2.5-pro:**
+- Limit: 2 requests/minute
+- Wait time: 30 seconds between chunks
+- Use for: High-quality corrections, complex documents
+
+**gemini-2.5-flash:**
+- Limit: 15 requests/minute
+- Wait time: 4 seconds between chunks
+- Use for: Fast processing, large batches
+
+### Retry Logic
+
+**Exponential backoff:**
+- Attempt 1: Immediate
+- Attempt 2: Wait 2 seconds
+- Attempt 3: Wait 4 seconds
+- Attempt 4: Wait 8 seconds
+
+**Fallback behavior:**
+- If `gemini-2.5-pro` fails after retries → fallback to `gemini-2.5-flash` for that chunk
+- Worker continues with remaining chunks
+
+### Batch Processing Example
+
+Processing 41 documents with `gemini-2.5-pro`:
+- Time per document: ~30 seconds
+- Total time: ~20 minutes
+- Documents/hour: ~120
+
+Processing 41 documents with `gemini-2.5-flash`:
+- Time per document: ~4 seconds
+- Total time: ~3 minutes
+- Documents/hour: ~900
+
+### Monitoring Batch Jobs
+
+```python
+# Start batch run
+run_id = create_run(project_id, document_ids=[...])
+
+# Poll for progress
+while True:
+    run = get_run(run_id)
+    print(f"[{run['processed_documents']}/{run['total_documents']}] Status: {run['status']}")
+    if run['status'] in ['completed', 'failed']:
+        break
+    time.sleep(10)
+```
 
 ## Server Architecture
 
@@ -293,14 +901,55 @@ The FastAPI server provides a REST API for document correction with:
 
 ### API Endpoints
 
+**Authentication** (`/auth`):
+```
+POST /auth/register            # Register new user
+POST /auth/login               # Login and get JWT token
+GET  /auth/me                  # Get current user info
+```
+
+**Projects** (`/projects`):
+```
+GET    /projects                      # List user's projects
+POST   /projects                      # Create project
+GET    /projects/{project_id}         # Get project details
+PATCH  /projects/{project_id}         # Update project
+DELETE /projects/{project_id}         # Delete project
+POST   /projects/{project_id}/documents/upload  # Upload documents
+```
+
+**Documents** (`/documents`):
+```
+GET    /documents/{document_id}       # Get document details
+DELETE /documents/{document_id}       # Delete document
+GET    /documents/{document_id}/download  # Download original
+```
+
+**Runs** (`/runs`):
+```
+POST /runs                     # Create correction run
+GET  /runs/{run_id}            # Get run status + progress
+GET  /runs/{run_id}/exports    # List downloadable artifacts
+```
+
+**Suggestions** (`/suggestions`):
+```
+GET   /suggestions/runs/{run_id}/suggestions  # List all suggestions
+PATCH /suggestions/suggestions/{suggestion_id}  # Accept/reject one
+POST  /suggestions/runs/{run_id}/suggestions/bulk-update  # Bulk accept/reject
+POST  /suggestions/runs/{run_id}/suggestions/accept-all  # Accept all pending
+POST  /suggestions/runs/{run_id}/suggestions/reject-all  # Reject all pending
+POST  /suggestions/runs/{run_id}/export-with-accepted  # Export DOCX with accepted only
+```
+
+**System**:
 ```
 GET  /health                   # Health check
 GET  /me/limits                # Get user plan limits
-POST /runs                     # Create correction run
-GET  /runs/{run_id}            # Get run status
+GET  /artifacts/{run_id}/{filename}  # Download artifact (logs, reports, corrected docs)
 ```
 
-See `server/main.py` and `server/schemas.py` for full API spec.
+See `server/routes_*.py` and `server/schemas.py` for full API spec.
 
 ## User Preferences
 

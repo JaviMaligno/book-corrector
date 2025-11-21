@@ -119,3 +119,33 @@ def update_project(
     session.commit()
     session.refresh(p)
     return p
+
+
+@router.delete("/{project_id}")
+def delete_project(
+    project_id: str,
+    session: Session = Depends(get_session),
+    current: User = Depends(get_current_user),
+):
+    p = session.get(Project, project_id)
+    if not p or p.owner_id != current.id:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    # Check if there are any runs associated with this project
+    runs = session.exec(select(Run).where(Run.project_id == project_id)).all()
+    if runs:
+        raise HTTPException(
+            status_code=400,
+            detail="No se puede eliminar un proyecto con ejecuciones. Elimina primero las ejecuciones."
+        )
+
+    # Delete associated documents first
+    docs = session.exec(select(Document).where(Document.project_id == project_id)).all()
+    for doc in docs:
+        session.delete(doc)
+
+    # Delete the project
+    session.delete(p)
+    session.commit()
+
+    return {"message": "Proyecto eliminado exitosamente"}
