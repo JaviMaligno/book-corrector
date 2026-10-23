@@ -79,3 +79,7 @@ Estado de alto nivel del backend (API, datos, colas, límites, despliegue). Mant
 - [x] Plan actualizado: `docs/plan-backend.md` (paralelismo y almacenamiento)
 - [x] Tests básicos: health, límites, auth, proyectos, subida y runs
 - [ ] End‑to‑end: run real con motor y artefactos
+
+## Mantenimiento de dependencias (2026-10-22)
+- [x] Runtime Python 3.11.17 y Docker local reproducible con uv.lock; auth sintética offline preserva HS256/bcrypt.
+- [ ] Resolver y verificar los errores de tipos existentes de CorrectionsTable/CorrectionsView.

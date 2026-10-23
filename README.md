@@ -13,7 +13,7 @@ Corrector inteligente de documentos DOCX usando Google Gemini, especializado en 
 
 ## 📋 Requisitos
 
-- Python 3.10+
+- Python 3.11.17 y uv 0.13.5
 - API Key de Google Gemini ([obtener aquí](https://aistudio.google.com/app/apikey))
 
 ## 🚀 Instalación
@@ -23,12 +23,9 @@ Corrector inteligente de documentos DOCX usando Google Gemini, especializado en 
 git clone <repo-url>
 cd corrector
 
-# Crear entorno virtual
-python -m venv .venv
+# Instalar el proyecto local con el lock versionado
+uv sync --frozen
 source .venv/bin/activate  # En Windows: .venv\Scripts\activate
-
-# Instalar dependencias
-pip install -e .
 
 # Configurar API key
 cp .env.example .env
@@ -400,3 +397,7 @@ El corrector detecta errores como:
 ## 📄 Licencia
 
 Este proyecto es de código abierto.
+
+## Dependency maintenance - 2026-10-22
+
+Node 24.22.1; Python 3.11.17 / uv 0.13.5. Frozen install commands, compatible dependency cohorts, offline checks and remaining verification limits are recorded in [SECURITY-DEPENDENCIES.md](SECURITY-DEPENDENCIES.md).

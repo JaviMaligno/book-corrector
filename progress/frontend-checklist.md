@@ -37,3 +37,7 @@
 - [ ] Atajos de teclado (A/R/U, navegación ↑/↓).
 - [ ] Perfiles de auto‑aplicación (Seguro vs Revisar) y UI de filtro por severidad.
 - [ ] Undo/redo por lote y reinicio de sesión de revisión.
+
+## Mantenimiento de dependencias (2026-10-22)
+- [x] Node 24.22.1, Vite 6 corregido y Router 7; contrato offline de rutas y CI de bundle/containers en Ready.
+- [ ] Resolver y verificar los errores de tipos existentes de CorrectionsTable/CorrectionsView.

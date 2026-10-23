@@ -37,9 +37,13 @@ examples/
 scripts/
 
 # Documentation (except docs/ which we need)
-README.md
 CLAUDE.md
-.env.example
 
 # CI/CD
 .github/
+
+# Keep dependency manifests and README available to frozen local-source builds.
+**/node_modules
+**/.venv
+**/.env*
+!**/*.env.example
