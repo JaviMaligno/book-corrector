@@ -1,0 +1,17 @@
+{
+  "synthetic_only": true,
+  "producer": "python-jose3.5.0",
+  "pyjwt_target": "2.15.1",
+  "algorithms": {
+    "HS256": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJpYXQiOjE2MDk0NTkyMDAsImV4cCI6NDEwMjQ0NDgwMCwicm9sZSI6InJlYWRlciJ9.giXCAPw_mdeKQ9MJxDuXAb6PPp4Q4t1VGndjL755p6w",
+      "key": "synthetic-jwt-migration-key-only-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "payload": {
+        "sub": "00000000-0000-0000-0000-000000000001",
+        "iat": 1609459200,
+        "exp": 4102444800,
+        "role": "reader"
+      }
+    }
+  }
+}

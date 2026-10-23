@@ -2,8 +2,8 @@
 
 import socket
 
+import jwt
 import pytest
-from jose import jwt
 
 from server import auth
 

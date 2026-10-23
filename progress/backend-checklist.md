@@ -85,3 +85,5 @@ Estado de alto nivel del backend (API, datos, colas, límites, despliegue). Mant
 - [x] Resolver y verificar los errores de tipos de CorrectionsTable/CorrectionsView; contratos offline y gate TypeScript en CI.
 
 - [x] Modernizar enums con StrEnum conservando valores/representaci?n; Ruff/Black y contratos JSON/SQLAlchemy verificados.
+
+- [x] Migrar JWT a PyJWT 2.15.1 y retirar jose/ECDSA del lock; validar tokens heredados, UTC, permisos y errores con contratos offline (`docs/jwt-migration.md`).
