@@ -82,4 +82,6 @@ Estado de alto nivel del backend (API, datos, colas, límites, despliegue). Mant
 
 ## Mantenimiento de dependencias (2026-10-22)
 - [x] Runtime Python 3.11.17 y Docker local reproducible con uv.lock; auth sintética offline preserva HS256/bcrypt.
-- [ ] Resolver y verificar los errores de tipos existentes de CorrectionsTable/CorrectionsView.
+- [x] Resolver y verificar los errores de tipos de CorrectionsTable/CorrectionsView; contratos offline y gate TypeScript en CI.
+
+- [x] Modernizar enums con StrEnum conservando valores/representaci?n; Ruff/Black y contratos JSON/SQLAlchemy verificados.

@@ -324,8 +324,7 @@ def setup_demo_data():
         # Create a summary markdown file
         summary_file = artifacts_dir / f"{demo_run.id}_documento_ejemplo.summary.md"
         with open(summary_file, "w", encoding="utf-8") as f:
-            f.write(
-                f"""# Resumen de Correcciones - Documento Ejemplo
+            f.write(f"""# Resumen de Correcciones - Documento Ejemplo
 
 ## Estadísticas
 
@@ -351,8 +350,7 @@ def setup_demo_data():
 ---
 
 *Generado automáticamente por el Corrector de Textos*
-"""
-            )
+""")
         print(f"✅ Created summary file: {summary_file}")
 
         export_md = Export(run_id=demo_run.id, kind=ExportKind.md, path=str(summary_file))

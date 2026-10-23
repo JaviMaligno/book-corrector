@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import { api } from '../lib/api'
 import { CorrectionsTable } from '../components/CorrectionsTable'
-import type { CorrectionRow, Suggestion } from '../lib/types'
+import { invalidateSuggestionsForRun, parseJsonl } from '../lib/corrections'
 import { useState, useMemo } from 'react'
 import { 
   listSuggestions, 
@@ -13,22 +13,6 @@ import {
   exportWithAccepted,
   downloadExportedDocument
 } from '../lib/suggestions'
-
-function parseJsonl(text: string, documentName: string): CorrectionRow[] {
-  return text
-    .trim()
-    .split('\n')
-    .filter(line => line.trim())
-    .map(line => {
-      try {
-        const row = JSON.parse(line) as CorrectionRow
-        return { ...row, document: documentName }
-      } catch {
-        return null
-      }
-    })
-    .filter((row): row is CorrectionRow => row !== null)
-}
 
 type StatusFilter = 'all' | 'pending' | 'accepted' | 'rejected'
 
@@ -85,37 +69,37 @@ export default function CorrectionsView() {
   // Mutations for server mode
   const acceptMutation = useMutation({
     mutationFn: (id: string) => updateSuggestionStatus(id, 'accepted'),
-    onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
+    onSuccess: () => invalidateSuggestionsForRun(queryClient, runId)
   })
 
   const rejectMutation = useMutation({
     mutationFn: (id: string) => updateSuggestionStatus(id, 'rejected'),
-    onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
+    onSuccess: () => invalidateSuggestionsForRun(queryClient, runId)
   })
 
   const revertMutation = useMutation({
     mutationFn: (id: string) => updateSuggestionStatus(id, 'pending'),
-    onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
+    onSuccess: () => invalidateSuggestionsForRun(queryClient, runId)
   })
 
   const bulkAcceptMutation = useMutation({
     mutationFn: (ids: string[]) => bulkUpdateSuggestions(runId, ids, 'accepted'),
-    onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
+    onSuccess: () => invalidateSuggestionsForRun(queryClient, runId)
   })
 
   const bulkRejectMutation = useMutation({
     mutationFn: (ids: string[]) => bulkUpdateSuggestions(runId, ids, 'rejected'),
-    onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
+    onSuccess: () => invalidateSuggestionsForRun(queryClient, runId)
   })
 
   const acceptAllMutation = useMutation({
     mutationFn: () => acceptAllSuggestions(runId),
-    onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
+    onSuccess: () => invalidateSuggestionsForRun(queryClient, runId)
   })
 
   const rejectAllMutation = useMutation({
     mutationFn: () => rejectAllSuggestions(runId),
-    onSuccess: () => queryClient.invalidateQueries(['suggestions', runId])
+    onSuccess: () => invalidateSuggestionsForRun(queryClient, runId)
   })
 
   const exportMutation = useMutation({
@@ -138,7 +122,7 @@ export default function CorrectionsView() {
   const documents = useMemo(() => {
     if (mode === 'server') return []
     if (!allCorrections) return []
-    const uniqueDocs = new Set(allCorrections.map(c => c.document).filter(Boolean))
+    const uniqueDocs = new Set(allCorrections.map(c => c.document).filter((name): name is string => !!name))
     return Array.from(uniqueDocs).sort()
   }, [mode, allCorrections])
 

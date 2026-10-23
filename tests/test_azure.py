@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test Azure OpenAI integration"""
+
 import sys
 
 from corrector.model import AzureOpenAICorrector

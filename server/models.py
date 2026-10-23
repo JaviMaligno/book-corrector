@@ -2,12 +2,19 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
-from enum import Enum
+from enum import Enum, StrEnum
 
 from sqlmodel import Field, SQLModel
 
 
-class Role(str, Enum):
+class StringEnum(StrEnum):
+    """Keep existing diagnostic strings while using the Python 3.11 enum base."""
+
+    __str__ = Enum.__str__
+    __format__ = Enum.__format__
+
+
+class Role(StringEnum):
     free = "free"
     premium = "premium"
     admin = "admin"
@@ -31,13 +38,13 @@ class Project(SQLModel, table=True):
     created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.utcnow())
 
 
-class DocumentKind(str, Enum):
+class DocumentKind(StringEnum):
     docx = "docx"
     txt = "txt"
     md = "md"
 
 
-class DocumentStatus(str, Enum):
+class DocumentStatus(StringEnum):
     new = "new"
     queued = "queued"
     processing = "processing"
@@ -55,12 +62,12 @@ class Document(SQLModel, table=True):
     content_backup: str | None = None  # Stores content for demo/ephemeral storage
 
 
-class RunMode(str, Enum):
+class RunMode(StringEnum):
     rapido = "rapido"
     profesional = "profesional"
 
 
-class RunStatus(str, Enum):
+class RunStatus(StringEnum):
     queued = "queued"
     processing = "processing"
     exporting = "exporting"
@@ -81,7 +88,7 @@ class Run(SQLModel, table=True):
     finished_at: dt.datetime | None = None
 
 
-class RunDocumentStatus(str, Enum):
+class RunDocumentStatus(StringEnum):
     queued = "queued"
     processing = "processing"
     completed = "completed"
@@ -101,7 +108,7 @@ class RunDocument(SQLModel, table=True):
     last_error: str | None = None
 
 
-class ExportKind(str, Enum):
+class ExportKind(StringEnum):
     docx = "docx"
     csv = "csv"
     jsonl = "jsonl"
@@ -153,7 +160,7 @@ class NormativeCatalog(SQLModel, table=True):
     snippet: str | None = None
 
 
-class SuggestionType(str, Enum):
+class SuggestionType(StringEnum):
     ortografia = "ortografia"
     puntuacion = "puntuacion"
     concordancia = "concordancia"
@@ -162,18 +169,18 @@ class SuggestionType(str, Enum):
     otro = "otro"
 
 
-class SuggestionSeverity(str, Enum):
+class SuggestionSeverity(StringEnum):
     error = "error"
     warning = "warning"
     info = "info"
 
 
-class SuggestionSource(str, Enum):
+class SuggestionSource(StringEnum):
     rule = "rule"
     llm = "llm"
 
 
-class SuggestionStatus(str, Enum):
+class SuggestionStatus(StringEnum):
     pending = "pending"
     accepted = "accepted"
     rejected = "rejected"

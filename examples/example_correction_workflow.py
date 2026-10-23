@@ -13,6 +13,7 @@ Requirements:
 - Server running on http://localhost:8000
 - Valid authentication token
 """
+
 import time
 
 import requests

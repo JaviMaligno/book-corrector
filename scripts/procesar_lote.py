@@ -12,6 +12,7 @@ Requiere:
 Salida:
     - Archivos .corrections.docx en correcciones_finales/
 """
+
 import sys
 import time
 from pathlib import Path

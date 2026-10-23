@@ -37,7 +37,7 @@ jobs:
           uv run --frozen black --check .
       - name: Offline backend contracts
         if: github.event.pull_request.draft == false && steps.scope.outputs.source == 'true'
-        run: uv run --frozen pytest -q tests/test_text_utils.py tests/test_engine_apply.py tests/test_auth_dependencies.py
+        run: uv run --frozen pytest -q tests/test_text_utils.py tests/test_engine_apply.py tests/test_auth_dependencies.py tests/test_model_enum_contracts.py
       - name: Validate both local-source container paths
         if: github.event.pull_request.draft == false && steps.scope.outputs.source == 'true'
         run: |

@@ -40,4 +40,4 @@
 
 ## Mantenimiento de dependencias (2026-10-22)
 - [x] Node 24.22.1, Vite 6 corregido y Router 7; contrato offline de rutas y CI de bundle/containers en Ready.
-- [ ] Resolver y verificar los errores de tipos existentes de CorrectionsTable/CorrectionsView.
+- [x] Resolver y verificar los errores de tipos de CorrectionsTable/CorrectionsView; contratos offline y gate TypeScript en CI.

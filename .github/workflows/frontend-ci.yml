@@ -34,11 +34,13 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Typecheck frontend
+        run: node node_modules/typescript/bin/tsc --noEmit
       - name: Build frontend bundle
         run: npm run build
       - name: Offline router contract
         if: github.event.pull_request.draft == false && steps.scope.outputs.source == 'true'
-        run: node --test --test-concurrency=2 tests/router-contract.test.mjs
+        run: node --test --test-concurrency=2 tests/router-contract.test.mjs tests/corrections-contract.test.mjs
       - name: Validate production container
         if: github.event.pull_request.draft == false && steps.scope.outputs.source == 'true'
         working-directory: .

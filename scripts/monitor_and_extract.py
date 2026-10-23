@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Monitor batch run and extract corrections when complete"""
+
 import sys
 import time
 from pathlib import Path
