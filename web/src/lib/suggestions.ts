@@ -17,11 +17,11 @@ export async function listSuggestions(
 }
 
 /**
- * Update status of a single suggestion (accept/reject)
+ * Update status of a single suggestion (accept/reject/revert)
  */
 export async function updateSuggestionStatus(
   suggestionId: string,
-  status: 'accepted' | 'rejected'
+  status: Suggestion['status']
 ): Promise<Suggestion> {
   const response = await api.patch<Suggestion>(
     `/suggestions/suggestions/${suggestionId}`,

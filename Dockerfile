@@ -1,55 +1,23 @@
-# Multi-stage build for corrector server
-FROM python:3.11-slim AS builder
-
+FROM ghcr.io/astral-sh/uv:0.13.5 AS uv
+FROM python:3.11.17-slim-bookworm AS builder
+COPY --from=uv /uv /uvx /bin/
 WORKDIR /app
+ENV UV_PYTHON_DOWNLOADS=never
+COPY pyproject.toml uv.lock README.md settings.py ./
+COPY corrector/ ./corrector/
+COPY server/ ./server/
+RUN uv sync --frozen --no-dev
 
-# Install build dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy only dependency files first (for layer caching)
-COPY pyproject.toml ./
-
-# Install dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e .
-
-# Final stage
-FROM python:3.11-slim
-
+FROM python:3.11.17-slim-bookworm
 WORKDIR /app
-
-# Copy installed packages from builder
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# Copy application code
+COPY --from=builder /app/.venv /app/.venv
 COPY corrector/ ./corrector/
 COPY server/ ./server/
 COPY settings.py ./
 COPY docs/ ./docs/
-
-# Create outputs directory
-RUN mkdir -p outputs /data
-
-# Default runtime env
-ENV LOG_LEVEL=info \
-    SYSTEM_MAX_WORKERS=2 \
-    DEMO_PLAN=free \
-    STORAGE_DIR=/data
-
-# Non-root user for security
-RUN useradd -m -u 1000 corrector && \
-    chown -R corrector:corrector /app /data
+RUN mkdir -p outputs /data && useradd -m -u 1000 corrector && chown -R corrector:corrector /app /data
+ENV PATH="/app/.venv/bin:$PATH" LOG_LEVEL=info SYSTEM_MAX_WORKERS=2 DEMO_PLAN=free STORAGE_DIR=/data
 USER corrector
-
-# Expose port
 EXPOSE 8000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
-
-# Run server
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]

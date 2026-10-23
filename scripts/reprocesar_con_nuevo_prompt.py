@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Script para reprocesar todos los documentos con el nuevo prompt mejorado"""
+
 import sys
 import time
 from pathlib import Path

@@ -57,7 +57,7 @@ services:
     branch: main
 
     # Build configuration
-    buildCommand: cd web && npm install && npm run build
+    buildCommand: cd web && npm ci --ignore-scripts --no-audit --no-fund && npm run build
     staticPublishPath: ./web/dist
 
     # SPA routing - all routes serve index.html for React Router
@@ -68,6 +68,8 @@ services:
 
     # Environment variables (baked into build)
     envVars:
+      - key: NODE_VERSION
+        value: 24.22.1
       - key: VITE_API_URL
         fromService:
           type: web

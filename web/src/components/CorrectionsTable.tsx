@@ -322,8 +322,8 @@ type RowProps = {
 
 function TableRow({ row, index, view, showDocumentColumn, mode = 'legacy', selected, onToggleSelect, onAccept, onReject, onRevert }: RowProps) {
   const suggestion = isSuggestion(row) ? row : null
-  const original = suggestion ? suggestion.before : row.original
-  const corrected = suggestion ? suggestion.after : row.corrected
+  const original = isSuggestion(row) ? row.before : row.original
+  const corrected = isSuggestion(row) ? row.after : row.corrected
   const isPending = suggestion?.status === 'pending'
   const isAccepted = suggestion?.status === 'accepted'
   const isRejected = suggestion?.status === 'rejected'
@@ -350,8 +350,8 @@ function TableRow({ row, index, view, showDocumentColumn, mode = 'legacy', selec
       <td className="py-3 pr-2 text-gray-500 text-center">{index}</td>
 
       {showDocumentColumn && (
-        <td className="py-3 pr-2 text-gray-700 font-medium max-w-[200px] truncate" title={row.document}>
-          {row.document}
+        <td className="py-3 pr-2 text-gray-700 font-medium max-w-[200px] truncate" title={isSuggestion(row) ? undefined : row.document}>
+          {isSuggestion(row) ? undefined : row.document}
         </td>
       )}
 

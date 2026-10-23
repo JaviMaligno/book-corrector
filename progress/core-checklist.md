@@ -44,3 +44,7 @@ Estado del core diferenciador (motor, reglas, exportables, consistencia, estilo)
 ## Interoperabilidad
 - [ ] Exportables (CSV/JSONL/MD) consumibles por backend y descargables vía API
 
+
+## Mantenimiento de dependencias (2026-10-22)
+- [x] Google GenAI 1.x/OpenAI 2.x conservados con lock actualizado; contratos DOCX heurísticos sin proveedor externo.
+- [ ] Resolver y verificar los errores de tipos existentes de CorrectionsTable/CorrectionsView.

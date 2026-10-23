@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
-FROM node:20-alpine AS base
+FROM node:24.22.1-alpine AS base
 WORKDIR /app
 COPY web/package.json /app/package.json
 COPY web/package-lock.json /app/package-lock.json
-RUN npm ci --omit=optional && npm install --no-save @rollup/rollup-linux-x64-musl
+RUN npm ci --ignore-scripts
 COPY web /app
 
 # Development uses vite dev server

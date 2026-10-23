@@ -136,7 +136,7 @@ def delete_project(
     if runs:
         raise HTTPException(
             status_code=400,
-            detail="No se puede eliminar un proyecto con ejecuciones. Elimina primero las ejecuciones."
+            detail="No se puede eliminar un proyecto con ejecuciones. Elimina primero las ejecuciones.",
         )
 
     # Delete associated documents first

@@ -79,3 +79,11 @@ Estado de alto nivel del backend (API, datos, colas, límites, despliegue). Mant
 - [x] Plan actualizado: `docs/plan-backend.md` (paralelismo y almacenamiento)
 - [x] Tests básicos: health, límites, auth, proyectos, subida y runs
 - [ ] End‑to‑end: run real con motor y artefactos
+
+## Mantenimiento de dependencias (2026-10-22)
+- [x] Runtime Python 3.11.17 y Docker local reproducible con uv.lock; auth sintética offline preserva HS256/bcrypt.
+- [x] Resolver y verificar los errores de tipos de CorrectionsTable/CorrectionsView; contratos offline y gate TypeScript en CI.
+
+- [x] Modernizar enums con StrEnum conservando valores/representaci?n; Ruff/Black y contratos JSON/SQLAlchemy verificados.
+
+- [x] Migrar JWT a PyJWT 2.15.1 y retirar jose/ECDSA del lock; validar tokens heredados, UTC, permisos y errores con contratos offline (`docs/jwt-migration.md`).

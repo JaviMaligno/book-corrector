@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test Azure OpenAI GPT-4.1 fallback"""
+
 import sys
 
 from corrector.model import AzureOpenAICorrector
